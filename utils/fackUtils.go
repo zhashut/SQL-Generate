@@ -12,7 +12,7 @@ import (
  * @author: 炸薯条
  * Date: 2023/6/7
  * Time: 11:49
- * Description: No Description
+ * Description: 随机数生成工具
  */
 
 func GetRandomValue(randomTypeEnum MockParamsRandomTypeEnum) string {

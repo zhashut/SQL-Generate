@@ -23,6 +23,9 @@ var mockTypeDataGeneratorMap map[MockTypeEnum]DataGenerator
 func init() {
 	mockTypeDataGeneratorMap = make(map[MockTypeEnum]DataGenerator)
 	mockTypeDataGeneratorMap[RANDOM] = NewRandomDataGenerator()
+	mockTypeDataGeneratorMap[FIXED] = NewFixedDataGenerator()
+	mockTypeDataGeneratorMap[NONE] = NewDefaultDataGenerator()
+	mockTypeDataGeneratorMap[INCREASE] = NewIncreaseDataGenerator()
 }
 
 // GetGenerator 获取实例
