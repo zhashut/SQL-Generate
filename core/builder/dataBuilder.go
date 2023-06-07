@@ -23,7 +23,7 @@ func GenerateData(tableSchema *schema.TableSchema, rowNum int32) []map[string]in
 	}
 	// 依次生成每一列
 	for _, field := range fieldList {
-		mockTypeEnum := consts.GetEnumByValue(field.FieldType)
+		mockTypeEnum := consts.GetMockTypeEnumByValue(field.FieldType)
 		dataGenerator := generator.GetGenerator(mockTypeEnum)
 		mockDataSlice := dataGenerator.DoGenerate(field, rowNum)
 		fieldName := field.FieldName

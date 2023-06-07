@@ -13,9 +13,9 @@ import (
  */
 
 type Generate struct {
-	TableSchema schema.TableSchema `json:"tableSchema"`
-	CreateSQL   string             `json:"createSql"`
-	DataList    []interface{}      `json:"dataList"`
-	InsertSQL   string             `json:"insertSql"`
-	DataJson    string             `json:"dataJson"`
+	TableSchema *schema.TableSchema      `json:"tableSchema"`
+	CreateSQL   string                   `json:"createSql"`
+	DataList    []map[string]interface{} `json:"dataList"`
+	InsertSQL   string                   `json:"insertSql"`
+	DataJson    string                   `json:"dataJson"`
 }

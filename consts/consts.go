@@ -48,8 +48,8 @@ var MockTypeStringToEnum = map[string]MockTypeEnum{
 	"词库":  DICT,
 }
 
-// GetEnumByValue 根据 value 获取枚举
-func GetEnumByValue(value string) MockTypeEnum {
+// GetMockTypeEnumByValue 根据 value 获取枚举，默认返回 NONE
+func GetMockTypeEnumByValue(value string) MockTypeEnum {
 	for mockNum, mockString := range MockTypeEnumToString {
 		if value == mockString {
 			return mockNum
@@ -91,3 +91,60 @@ const (
 	BINARY     FieldTypeEnum = "binary"
 	VARBINARY  FieldTypeEnum = "varbinary"
 )
+
+type MockParamsRandomTypeEnum string
+
+const (
+	STRING     MockParamsRandomTypeEnum = "字符串"
+	NAME       MockParamsRandomTypeEnum = "人名"
+	CITY       MockParamsRandomTypeEnum = "城市"
+	URL        MockParamsRandomTypeEnum = "网址"
+	EMAIL      MockParamsRandomTypeEnum = "邮箱"
+	IP         MockParamsRandomTypeEnum = "IP"
+	INTEGER    MockParamsRandomTypeEnum = "整数"
+	DECIMALS   MockParamsRandomTypeEnum = "小数"
+	UNIVERSITY MockParamsRandomTypeEnum = "大学"
+	DATES      MockParamsRandomTypeEnum = "日期"
+	TIMESTAMPS MockParamsRandomTypeEnum = "时间戳"
+	PHONE      MockParamsRandomTypeEnum = "手机号"
+)
+
+var MockParamsRandomTypeEnumToString = map[MockParamsRandomTypeEnum]string{
+	STRING:     "字符串",
+	NAME:       "人名",
+	CITY:       "城市",
+	URL:        "网址",
+	EMAIL:      "邮箱",
+	IP:         "IP",
+	INTEGER:    "整数",
+	DECIMALS:   "小数",
+	UNIVERSITY: "大学",
+	DATES:      "日期",
+	TIMESTAMPS: "时间戳",
+	PHONE:      "手机号",
+}
+
+var MockParamsRandomTypeStringToEnum = map[string]MockParamsRandomTypeEnum{
+	"字符串": STRING,
+	"人名":  NAME,
+	"城市":  CITY,
+	"网址":  URL,
+	"邮箱":  EMAIL,
+	"IP":  IP,
+	"整数":  INTEGER,
+	"小数":  DECIMALS,
+	"大学":  UNIVERSITY,
+	"日期":  DATES,
+	"时间戳": TIMESTAMPS,
+	"手机号": PHONE,
+}
+
+// GetMockParamsRandomTypeByValue 根据 value 获取枚举，默认返回 STRING
+func GetMockParamsRandomTypeByValue(value string) MockParamsRandomTypeEnum {
+	for mockNum, mockString := range MockParamsRandomTypeEnumToString {
+		if value == mockString {
+			return mockNum
+		}
+	}
+	return STRING
+}

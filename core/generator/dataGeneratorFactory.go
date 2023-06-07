@@ -19,8 +19,8 @@ type DataGenerator interface {
 
 var mockTypeDataGeneratorMap map[MockTypeEnum]DataGenerator
 
+// TODO 这个地方可能会报错，因为这里面的配置有依赖其他配置
 func init() {
-	// TODO
 	mockTypeDataGeneratorMap = make(map[MockTypeEnum]DataGenerator)
 	mockTypeDataGeneratorMap[RANDOM] = NewRandomDataGenerator()
 }

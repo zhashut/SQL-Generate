@@ -39,8 +39,11 @@ type SQLDialect interface {
 	ParseTableName(tableName string) string // 解析表名
 }
 
+// NewSQLBuilder TODO 这里可以设置成传参的方式来指定不同的实现，灵活变动
 func NewSQLBuilder() *SQLBuilder {
-	return &SQLBuilder{}
+	return &SQLBuilder{
+		SQLDialect: &Dialect{},
+	}
 }
 
 // BuildCreateTableSql 构造建表SQL
@@ -91,7 +94,7 @@ func (s *SQLBuilder) BuildCreateTableSql(tableSchema *schema.TableSchema) (strin
 // 生成创建字段的 SQL
 func (s *SQLBuilder) buildCreateFieldSQL(field *schema.Field) (string, error) {
 	if field == nil {
-		return "", fmt.Errorf("请求参数错误")
+		return "", fmt.Errorf("buildCreateFieldSQL: 请求参数错误")
 	}
 	fieldName := s.SQLDialect.WrapFieldName(field.FieldName)
 	fieldType := field.FieldType
@@ -109,7 +112,6 @@ func (s *SQLBuilder) buildCreateFieldSQL(field *schema.Field) (string, error) {
 	fieldAppend(&fieldStrSlice, EMPTY, fieldType)
 	// 默认值
 	if defaultValue == "" {
-		// TODO getValueStr 未实现
 		fieldAppend(&fieldStrSlice, EMPTY, DEFAULT, getValueStr(field, defaultValue))
 	}
 	// 是否非空
@@ -139,14 +141,71 @@ func (s *SQLBuilder) buildCreateFieldSQL(field *schema.Field) (string, error) {
 
 // BuildInsertSQL TODO 构造插入数据 SQL
 // e.g. INSERT INTO report (id, content) VALUES (1, "瑶瑶最好了")
-func (s *SQLBuilder) BuildInsertSQL(tableSchema *schema.TableSchema, dataList interface{}) (string, error) {
-	return "", nil
+func (s *SQLBuilder) BuildInsertSQL(tableSchema *schema.TableSchema, dataList []map[string]interface{}) (string, error) {
+	if len(dataList) < 1 {
+		return "", fmt.Errorf("BuildInsertSQL: dataList len is %d", len(dataList))
+	}
+	// 构造表名
+	tableName := s.SQLDialect.WrapTableName(tableSchema.TableName)
+	dbName := tableSchema.DBName
+	if dbName != "" {
+		tableName = fmt.Sprintf("%s.%s", dbName, tableName)
+	}
+	// 构造表字段
+	fieldList := tableSchema.FieldList
+	// 过滤不模拟的字段
+	tmpList := make([]schema.Field, 0)
+	for _, field := range fieldList {
+		typeEnum := MockTypeStringToEnum[field.FieldType]
+		if typeEnum != NONE {
+			tmpList = append(tmpList, field)
+		}
+	}
+	fieldList = tmpList
+	// 拼接插入语句
+	resultStringBuilder := strings.Builder{}
+	total := len(dataList)
+	for i := 0; i < total; i++ {
+		dataRow := dataList[i]
+		keyStr := s.getKeyStrWithJoin(&resultStringBuilder, fieldList)
+		valueStr := s.getValueStrWithJoin(&resultStringBuilder, dataRow, fieldList)
+		// 构造并填充模板
+		result := fmt.Sprintf("insert into %s (%s) values (%s);", tableName, keyStr, valueStr)
+		resultStringBuilder.WriteString(result)
+		// 最后一个字段后没有换行
+		if i != total-1 {
+			resultStringBuilder.WriteString("\n")
+		}
+	}
+	return resultStringBuilder.String(), nil
 }
 
 func fieldAppend(fieldStrSlice *strings.Builder, fields ...string) {
 	for _, field := range fields {
 		fieldStrSlice.WriteString(field)
 	}
+}
+
+// 获取字段键
+func (s *SQLBuilder) getKeyStrWithJoin(builder *strings.Builder, fieldList []schema.Field) string {
+	for i, field := range fieldList {
+		if i > 0 {
+			builder.WriteString(", ")
+		}
+		builder.WriteString(s.SQLDialect.WrapFieldName(field.FieldName))
+	}
+	return builder.String()
+}
+
+// 获取字段值
+func (s *SQLBuilder) getValueStrWithJoin(builder *strings.Builder, dataRow map[string]interface{}, fieldList []schema.Field) string {
+	for i, field := range fieldList {
+		if i > 0 {
+			builder.WriteString(", ")
+		}
+		builder.WriteString(getValueStr(&field, dataRow[field.FieldName]))
+	}
+	return builder.String()
 }
 
 // 根据列的属性获取值字符串

@@ -18,6 +18,10 @@ import (
 type GeneratorFace struct {
 }
 
+func NewGeneratorFace() *GeneratorFace {
+	return &GeneratorFace{}
+}
+
 func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Generate, error) {
 	// 校验
 	if err := validSchema(tableSchema); err != nil {
@@ -32,7 +36,23 @@ func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Ge
 	// 生成模拟数据
 	dataList := builder.GenerateData(tableSchema, mockNum)
 	// 生成插入 SQL
-
+	insertSQL, err := sqlBuilder.BuildInsertSQL(tableSchema, dataList)
+	if err != nil {
+		return nil, err
+	}
+	// 生成数据 Json
+	dataJson, err := builder.BuildJSON(dataList)
+	if err != nil {
+		return nil, fmt.Errorf("dataJson 生成失败")
+	}
+	// 封装返回
+	return &models.Generate{
+		TableSchema: tableSchema,
+		CreateSQL:   createSQL,
+		DataList:    dataList,
+		InsertSQL:   insertSQL,
+		DataJson:    dataJson,
+	}, nil
 }
 
 func validSchema(tableSchema *schema.TableSchema) error {
