@@ -26,7 +26,7 @@ func NewDefaultDataGenerator() *DefaultDataGenerator {
 
 func (r *DefaultDataGenerator) DoGenerate(field schema.Field, rowNum int32) []string {
 	mockParams := field.MockParams
-	result := make([]string, rowNum)
+	result := make([]string, 0, rowNum)
 	// 主键采用递增策略
 	if field.PrimaryKey {
 		if mockParams == "" {

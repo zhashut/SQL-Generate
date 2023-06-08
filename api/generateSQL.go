@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"sql_generate/core"
 	"sql_generate/core/schema"
 )
@@ -21,6 +22,7 @@ func GenerateSQL(c *gin.Context) {
 	}
 	generator := core.NewGeneratorFace()
 	all, err := generator.GenerateAll(&tableSchema)
+	zap.S().Infof("GenerateAll.result: %v", all)
 	if err != nil {
 		ResponseFailed(c, err)
 	}

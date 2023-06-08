@@ -87,7 +87,7 @@ func (s *SQLBuilder) BuildCreateTableSql(tableSchema *schema.TableSchema) (strin
 		"(\n"+
 		"%s\n"+
 		") %s;", tablePrefixComment, tableName, fieldStr, tableSuffixComment)
-	zap.S().Info("sql result: ", result)
+	zap.S().Info("BuildCreateTableSql.result: ", result)
 	return result, nil
 }
 
@@ -136,6 +136,7 @@ func (s *SQLBuilder) buildCreateFieldSQL(field *schema.Field) (string, error) {
 	if primaryKey {
 		fieldAppend(&fieldStrSlice, EMPTY, PRIMARY_KEY)
 	}
+	zap.S().Infof("buildCreateFieldSQL.fieldStrList: %s", fieldStrSlice.String())
 	return fieldStrSlice.String(), nil
 }
 
@@ -156,7 +157,7 @@ func (s *SQLBuilder) BuildInsertSQL(tableSchema *schema.TableSchema, dataList []
 	// 过滤不模拟的字段
 	tmpList := make([]schema.Field, 0)
 	for _, field := range fieldList {
-		typeEnum := MockTypeStringToEnum[field.FieldType]
+		typeEnum := MockTypeStringToEnum[field.MockType]
 		if typeEnum != NONE {
 			tmpList = append(tmpList, field)
 		}
@@ -166,9 +167,11 @@ func (s *SQLBuilder) BuildInsertSQL(tableSchema *schema.TableSchema, dataList []
 	resultStringBuilder := strings.Builder{}
 	total := len(dataList)
 	for i := 0; i < total; i++ {
+		// TODO dataRow 和 Java那边的对不上，id 不对和少了 username 字段
 		dataRow := dataList[i]
-		keyStr := s.getKeyStrWithJoin(&resultStringBuilder, fieldList)
-		valueStr := s.getValueStrWithJoin(&resultStringBuilder, dataRow, fieldList)
+		keyStr := s.getKeyStrWithJoin(fieldList)
+		// TODO
+		valueStr := s.getValueStrWithJoin(dataRow, fieldList)
 		// 构造并填充模板
 		result := fmt.Sprintf("insert into %s (%s) values (%s);", tableName, keyStr, valueStr)
 		resultStringBuilder.WriteString(result)
@@ -177,6 +180,7 @@ func (s *SQLBuilder) BuildInsertSQL(tableSchema *schema.TableSchema, dataList []
 			resultStringBuilder.WriteString("\n")
 		}
 	}
+	zap.S().Infof("BuildInsertSQL.resultStringBuilder: %s", resultStringBuilder.String())
 	return resultStringBuilder.String(), nil
 }
 
@@ -187,7 +191,8 @@ func fieldAppend(fieldStrSlice *strings.Builder, fields ...string) {
 }
 
 // 获取字段键
-func (s *SQLBuilder) getKeyStrWithJoin(builder *strings.Builder, fieldList []schema.Field) string {
+func (s *SQLBuilder) getKeyStrWithJoin(fieldList []schema.Field) string {
+	builder := strings.Builder{}
 	for i, field := range fieldList {
 		if i > 0 {
 			builder.WriteString(", ")
@@ -198,7 +203,8 @@ func (s *SQLBuilder) getKeyStrWithJoin(builder *strings.Builder, fieldList []sch
 }
 
 // 获取字段值
-func (s *SQLBuilder) getValueStrWithJoin(builder *strings.Builder, dataRow map[string]interface{}, fieldList []schema.Field) string {
+func (s *SQLBuilder) getValueStrWithJoin(dataRow map[string]interface{}, fieldList []schema.Field) string {
+	builder := strings.Builder{}
 	for i, field := range fieldList {
 		if i > 0 {
 			builder.WriteString(", ")

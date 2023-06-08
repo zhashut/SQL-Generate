@@ -21,7 +21,7 @@ func NewIncreaseDataGenerator() *IncreaseDataGenerator {
 
 func (r *IncreaseDataGenerator) DoGenerate(field schema.Field, rowNum int32) []string {
 	mockParams := field.MockParams
-	result := make([]string, rowNum)
+	result := make([]string, 0, rowNum)
 	if mockParams == "" {
 		mockParams = "1"
 	}

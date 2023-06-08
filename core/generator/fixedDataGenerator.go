@@ -21,7 +21,7 @@ func (r *FixedDataGenerator) DoGenerate(field schema.Field, rowNum int32) []stri
 	if mockParams == "" {
 		mockParams = "6"
 	}
-	result := make([]string, rowNum)
+	result := make([]string, 0, rowNum)
 	for i := 0; i < int(rowNum); i++ {
 		result = append(result, mockParams)
 	}

@@ -22,7 +22,7 @@ func NewRandomDataGenerator() *RandomDataGenerator {
 
 func (r *RandomDataGenerator) DoGenerate(field schema.Field, rowNum int32) []string {
 	mockParams := field.MockParams
-	result := make([]string, rowNum)
+	result := make([]string, 0, rowNum)
 	for i := 0; i < int(rowNum); i++ {
 		randomTypeEnum := consts.GetMockParamsRandomTypeByValue(mockParams)
 		randomString := utils.GetRandomValue(randomTypeEnum)

@@ -21,7 +21,7 @@ func GetRandomValue(randomTypeEnum MockParamsRandomTypeEnum) string {
 		return defaultValue
 	}
 
-	layout := "2006-01-02"
+	layout := "2006-01-02 15:04:05"
 
 	switch randomTypeEnum {
 	case NAME:
@@ -41,13 +41,14 @@ func GetRandomValue(randomTypeEnum MockParamsRandomTypeEnum) string {
 	case UNIVERSITY:
 		return gofakeit.Company()
 	case DATES:
-		startDate, _ := time.Parse(layout, "2022-01-01 00:00:00")
-		endDate, _ := time.Parse(layout, "2023-01-01 00:00:00")
+		startDate, _ := time.Parse(time.RFC3339, "2021-07-14T09:15:00Z")
+		endDate, _ := time.Parse(time.RFC3339, "2021-07-14T09:15:00Z")
 		randomDate := gofakeit.DateRange(startDate, endDate)
-		return randomDate.Format(layout)
+		dateStr := randomDate.Format(layout)
+		return fmt.Sprintf("%s", dateStr)
 	case TIMESTAMPS:
-		startTime, _ := time.Parse(layout, "2022-01-01 00:00:00")
-		endTime, _ := time.Parse(layout, "2023-01-01 00:00:00")
+		startTime, _ := time.Parse(time.RFC3339, "2022-01-01 00:00:00")
+		endTime, _ := time.Parse(time.RFC3339, "2023-01-01 00:00:00")
 		randomTime := gofakeit.DateRange(startTime, endTime)
 		return fmt.Sprintf("%d", randomTime.Unix())
 	case PHONE:
