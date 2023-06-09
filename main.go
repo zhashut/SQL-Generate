@@ -22,6 +22,7 @@ func main() {
 	// 初始化配置
 	initialize.InitLogger()
 	initialize.InitConfig()
+	initialize.InitDB()
 	r := initialize.Router()
 
 	// 启动监听端口

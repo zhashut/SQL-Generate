@@ -1,8 +1,8 @@
 host: 0.0.0.0
 mysql:
+    db: sqlfather
     host: 127.0.0.1
-    name: sqlfather
-    password: "12345"
+    password: 12345
     port: 3306
     user: root
 port: 8102

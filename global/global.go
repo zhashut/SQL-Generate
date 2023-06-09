@@ -1,6 +1,9 @@
 package global
 
-import "sql_generate/config"
+import (
+	"gorm.io/gorm"
+	"sql_generate/config"
+)
 
 /**
  * Created with GoLand 2022.2.3.
@@ -12,4 +15,5 @@ import "sql_generate/config"
 
 var (
 	ServerConfig *config.ServerConfig = &config.ServerConfig{}
+	DB           *gorm.DB
 )

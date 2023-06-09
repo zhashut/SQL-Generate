@@ -10,7 +10,8 @@ import (
  * @author: 炸薯条
  * Date: 2023/6/6
  * Time: 17:45
- * Description: No Description
+ * Description: 数据生成器工厂
+ * 工厂 + 单例模式，降低开销
  */
 
 type DataGenerator interface {
@@ -19,8 +20,10 @@ type DataGenerator interface {
 
 var mockTypeDataGeneratorMap map[MockTypeEnum]DataGenerator
 
-// TODO 这个地方可能会报错，因为这里面的配置有依赖其他配置
 func init() {
+	/**
+	 * 模拟类型 => 生成器映射
+	 */
 	mockTypeDataGeneratorMap = make(map[MockTypeEnum]DataGenerator)
 	mockTypeDataGeneratorMap[RANDOM] = NewRandomDataGenerator()
 	mockTypeDataGeneratorMap[FIXED] = NewFixedDataGenerator()

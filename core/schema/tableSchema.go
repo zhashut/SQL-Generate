@@ -5,7 +5,7 @@ package schema
  * @author: 炸薯条
  * Date: 2023/6/5
  * Time: 14:46
- * Description: No Description
+ * Description: 表概要
  */
 
 // TableSchema 表概要

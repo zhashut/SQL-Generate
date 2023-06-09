@@ -32,5 +32,4 @@ func ResponseFailed(c *gin.Context, err error) {
 		Code:    40001,
 		Message: err.Error(),
 	})
-	return
 }

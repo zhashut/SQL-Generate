@@ -10,7 +10,7 @@ import (
  * @author: 炸薯条
  * Date: 2023/6/7
  * Time: 9:11
- * Description: No Description
+ * Description: 配置跨域
  */
 
 func Cors() gin.HandlerFunc {

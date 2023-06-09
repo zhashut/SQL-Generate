@@ -13,7 +13,7 @@ import (
  * @author: 炸薯条
  * Date: 2023/6/5
  * Time: 16:47
- * Description:  * SQL 生成器
+ * Description: SQL 生成器
  * 支持方言，策略模式
  */
 
@@ -32,6 +32,7 @@ type SQLBuilder struct {
 	SQLDialect SQLDialect
 }
 
+// SQLDialect SQL 方言
 type SQLDialect interface {
 	WrapFieldName(name string) string       // 封装字段名
 	ParseFieldName(fieldName string) string // 解析字段名
@@ -80,7 +81,6 @@ func (s *SQLBuilder) BuildCreateTableSql(tableSchema *schema.TableSchema) (strin
 		}
 	}
 	fieldStr := fieldStrBuilder.String()
-	// 填充模板
 	// 构造模板
 	result := fmt.Sprintf("%s\n"+
 		"create table if not exists %s\n"+
@@ -105,42 +105,42 @@ func (s *SQLBuilder) buildCreateFieldSQL(field *schema.Field) (string, error) {
 	primaryKey := field.PrimaryKey
 	autoIncrement := field.AutoIncrement
 	// <库名>.<表名> <column_name> int default 0 not null auto_increment comment '注释' primary Key
-	fieldStrSlice := strings.Builder{}
+	fieldStrList := strings.Builder{}
 	// 字段名
-	fieldStrSlice.WriteString(fieldName)
+	fieldStrList.WriteString(fieldName)
 	// 字段类型
-	fieldAppend(&fieldStrSlice, EMPTY, fieldType)
+	fieldAppend(&fieldStrList, EMPTY, fieldType)
 	// 默认值
 	if defaultValue == "" {
-		fieldAppend(&fieldStrSlice, EMPTY, DEFAULT, getValueStr(field, defaultValue))
+		fieldAppend(&fieldStrList, EMPTY, DEFAULT, getValueStr(field, defaultValue))
 	}
 	// 是否非空
 	tmpValue := NOT_NULL
 	if notNil {
 		tmpValue = NULL
 	}
-	fieldAppend(&fieldStrSlice, EMPTY, tmpValue)
+	fieldAppend(&fieldStrList, EMPTY, tmpValue)
 	// 是否自增
 	if autoIncrement {
-		fieldAppend(&fieldStrSlice, EMPTY, AUTO_INCREMENT)
+		fieldAppend(&fieldStrList, EMPTY, AUTO_INCREMENT)
 	}
 	// 附加条件
 	if onUpdate != "" {
-		fieldAppend(&fieldStrSlice, EMPTY, ON_UPDATE, onUpdate)
+		fieldAppend(&fieldStrList, EMPTY, ON_UPDATE, onUpdate)
 	}
 	// 注释
 	if comment != "" {
-		fieldAppend(&fieldStrSlice, EMPTY, fmt.Sprintf("comment '%s'", comment))
+		fieldAppend(&fieldStrList, EMPTY, fmt.Sprintf("comment '%s'", comment))
 	}
 	// 是否为主键
 	if primaryKey {
-		fieldAppend(&fieldStrSlice, EMPTY, PRIMARY_KEY)
+		fieldAppend(&fieldStrList, EMPTY, PRIMARY_KEY)
 	}
-	zap.S().Infof("buildCreateFieldSQL.fieldStrList: %s", fieldStrSlice.String())
-	return fieldStrSlice.String(), nil
+	zap.S().Infof("buildCreateFieldSQL.fieldStrList: %s", fieldStrList.String())
+	return fieldStrList.String(), nil
 }
 
-// BuildInsertSQL TODO 构造插入数据 SQL
+// BuildInsertSQL 构造插入数据 SQL
 // e.g. INSERT INTO report (id, content) VALUES (1, "瑶瑶最好了")
 func (s *SQLBuilder) BuildInsertSQL(tableSchema *schema.TableSchema, dataList []map[string]interface{}) (string, error) {
 	if len(dataList) < 1 {
@@ -167,10 +167,8 @@ func (s *SQLBuilder) BuildInsertSQL(tableSchema *schema.TableSchema, dataList []
 	resultStringBuilder := strings.Builder{}
 	total := len(dataList)
 	for i := 0; i < total; i++ {
-		// TODO dataRow 和 Java那边的对不上，id 不对和少了 username 字段
 		dataRow := dataList[i]
 		keyStr := s.getKeyStrWithJoin(fieldList)
-		// TODO
 		valueStr := s.getValueStrWithJoin(dataRow, fieldList)
 		// 构造并填充模板
 		result := fmt.Sprintf("insert into %s (%s) values (%s);", tableName, keyStr, valueStr)
@@ -184,9 +182,10 @@ func (s *SQLBuilder) BuildInsertSQL(tableSchema *schema.TableSchema, dataList []
 	return resultStringBuilder.String(), nil
 }
 
-func fieldAppend(fieldStrSlice *strings.Builder, fields ...string) {
+// 封装拼接字符串方法
+func fieldAppend(fieldStrList *strings.Builder, fields ...string) {
 	for _, field := range fields {
-		fieldStrSlice.WriteString(field)
+		fieldStrList.WriteString(field)
 	}
 }
 

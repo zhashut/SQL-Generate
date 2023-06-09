@@ -11,7 +11,7 @@ package config
 type ServerConfig struct {
 	Host        string      `mapstructure:"host" json:"host"`
 	Port        int         `mapstructure:"port" json:"port"`
-	MySQLConfig MySQLConfig `mapstructrue:"mysql" json:"mysql"`
+	MySQLConfig MySQLConfig `mapstructure:"mysql" json:"mysql"`
 }
 
 type MySQLConfig struct {
@@ -19,5 +19,5 @@ type MySQLConfig struct {
 	Port     int    `mapstructure:"port" json:"port"`
 	Name     string `mapstructure:"db" json:"db"`
 	User     string `mapstructure:"user" json:"user"`
-	Password string `mapstructure:"password" json:"password"`
+	Password int    `mapstructure:"password" json:"password"`
 }

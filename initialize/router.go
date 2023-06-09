@@ -11,7 +11,7 @@ import (
  * @author: 炸薯条
  * Date: 2023/6/7
  * Time: 9:10
- * Description: No Description
+ * Description: 统一全局路由初始化
  */
 
 func Router() *gin.Engine {
@@ -19,5 +19,6 @@ func Router() *gin.Engine {
 	r.Use(middlewares.Cors())
 	apiGroup := r.Group("/api")
 	routers.InitGenerateSQL(apiGroup)
+	routers.InitUser(apiGroup)
 	return r
 }

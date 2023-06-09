@@ -3,8 +3,8 @@ package core
 import (
 	"fmt"
 	"sql_generate/core/builder"
-	"sql_generate/core/models"
 	"sql_generate/core/schema"
+	"sql_generate/models"
 )
 
 /**
@@ -22,12 +22,14 @@ func NewGeneratorFace() *GeneratorFace {
 	return &GeneratorFace{}
 }
 
+// GenerateAll 生成所有内容
 func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Generate, error) {
 	// 校验
 	if err := validSchema(tableSchema); err != nil {
 		return nil, err
 	}
 	sqlBuilder := builder.NewSQLBuilder()
+	// 生成创建 SQL
 	createSQL, err := sqlBuilder.BuildCreateTableSql(tableSchema)
 	if err != nil {
 		return nil, err
@@ -55,6 +57,7 @@ func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Ge
 	}, nil
 }
 
+// 校验 schema
 func validSchema(tableSchema *schema.TableSchema) error {
 	if tableSchema == nil {
 		return fmt.Errorf("failed valid schema")
@@ -84,6 +87,7 @@ func validSchema(tableSchema *schema.TableSchema) error {
 	return nil
 }
 
+// 检验字段
 func validField(field schema.Field) error {
 	fieldName := field.FieldName
 	fieldType := field.FieldType
