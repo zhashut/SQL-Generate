@@ -12,19 +12,19 @@ import (
  * @author: 炸薯条
  * Date: 2023/6/7
  * Time: 9:32
- * Description: No Description
+ * Description: 数据生成器api
  */
 
 func GenerateSQL(c *gin.Context) {
 	var tableSchema schema.TableSchema
 	if err := c.ShouldBind(&tableSchema); err != nil {
-		ResponseFailed(c, err)
+		ResponseFailed(c, ErrorInvalidParams)
 	}
 	generator := core.NewGeneratorFace()
 	all, err := generator.GenerateAll(&tableSchema)
 	zap.S().Infof("GenerateAll.result: %v", all)
 	if err != nil {
-		ResponseFailed(c, err)
+		ResponseFailed(c, ErrorInvalidParams)
 	}
 
 	ResponseSuccess(c, all)

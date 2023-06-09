@@ -17,7 +17,7 @@ import (
  * @author: 炸薯条
  * Date: 2023/6/9
  * Time: 20:18
- * Description: No Description
+ * Description: db 全局初始化
  */
 
 func InitDB() {

@@ -24,7 +24,7 @@ func NewUserService() *UserService {
 	return &UserService{}
 }
 
-func (s *UserService) UserRegister(ctx context.Context, u *models.UserRegister) (*models.User, error) {
+func (s *UserService) UserRegister(ctx context.Context, u *models.UserRegister) (*int64, error) {
 	if u.UserName == "" || u.UserAccount == "" || u.Password == "" || u.CheckPassword == "" {
 		return nil, fmt.Errorf("参数不能为空")
 	}
@@ -46,9 +46,7 @@ func (s *UserService) UserRegister(ctx context.Context, u *models.UserRegister) 
 	if err != nil {
 		return nil, err
 	}
-	return &models.User{
-		ID: uid,
-	}, nil
+	return &uid, nil
 }
 
 // 密码加密

@@ -11,22 +11,21 @@ import (
  * @author: 炸薯条
  * Date: 2023/6/9
  * Time: 22:59
- * Description: No Description
+ * Description: 用户相关api
  */
 
 // UserRegister 用户注册
 func UserRegister(c *gin.Context) {
 	var request models.UserRegister
 	if err := c.ShouldBind(&request); err != nil {
-		// TODO 做统一错误处理
-		ResponseFailed(c, err)
+		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
 	s := server.NewUserService()
 	resp, err := s.UserRegister(c, &request)
 	if err != nil {
-		ResponseFailed(c, err)
+		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	ResponseSuccess(c, resp.ID)
+	ResponseSuccess(c, resp)
 }

@@ -10,7 +10,7 @@ import (
  * @author: 炸薯条
  * Date: 2023/6/7
  * Time: 10:31
- * Description: No Description
+ * Description: 全局变量
  */
 
 var (
