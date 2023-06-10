@@ -1,6 +1,8 @@
 package initialize
 
 import (
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"sql_generate/middlewares"
 	"sql_generate/routers"
@@ -16,7 +18,8 @@ import (
 
 func Router() *gin.Engine {
 	r := gin.Default()
-	r.Use(middlewares.Cors())
+	store := cookie.NewStore([]byte("secret"))
+	r.Use(middlewares.Cors(), sessions.Sessions("mysession", store))
 	apiGroup := r.Group("/api")
 	routers.InitGenerateSQL(apiGroup)
 	routers.InitUser(apiGroup)

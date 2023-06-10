@@ -16,6 +16,8 @@ import (
 func InitUser(r *gin.RouterGroup) {
 	sqlRouter := r.Group("/user")
 	{
-		sqlRouter.POST("/register", api.UserRegister)
+		sqlRouter.POST("/register", api.Register)
+		sqlRouter.POST("/login", api.Login)
+		sqlRouter.GET("/get/login", api.LoginUser)
 	}
 }

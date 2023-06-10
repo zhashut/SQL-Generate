@@ -31,3 +31,8 @@ type UserRegister struct {
 	Password      string `form:"userPassword" json:"userPassword" binding:"required"`
 	CheckPassword string `form:"checkPassword" json:"checkPassword" binding:"required"`
 }
+
+type UserLogin struct {
+	UserAccount string `form:"userAccount" json:"userAccount" binding:"required"`
+	Password    string `form:"userPassword" json:"userPassword" binding:"required"`
+}
