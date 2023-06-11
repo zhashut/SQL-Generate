@@ -88,6 +88,23 @@ func (s *UserService) GetLoginUser(ctx context.Context, session sessions.Session
 	return user, nil
 }
 
+// Logout 用户退出
+func (s *UserService) Logout(ctx context.Context, session sessions.Session) (bool, error) {
+	currentUser := session.Get(USER_LOGIN_STATE).(*models.User)
+	if currentUser == nil {
+		return false, fmt.Errorf("未登录")
+	}
+	// 移除登录态
+	session.Delete(USER_LOGIN_STATE)
+	return true, nil
+}
+
+// IsAdmin 是否为管理员
+func (s *UserService) IsAdmin(ctx context.Context, session sessions.Session) (bool, error) {
+	currentUser := session.Get(USER_LOGIN_STATE).(*models.User)
+	return currentUser != nil && currentUser.UserRole == ADMIN_ROLE, nil
+}
+
 // 密码加密
 func encryptPassword(originPassword string) string {
 	hash := md5.New()

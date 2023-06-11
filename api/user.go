@@ -15,6 +15,19 @@ import (
  * Description: 用户相关api
  */
 
+func userToVo(user *models.User) *models.UserVo {
+	return &models.UserVo{
+		ID:          user.ID,
+		UserName:    user.UserName,
+		UserAccount: user.UserAccount,
+		UserAvatar:  user.UserAvatar,
+		Gender:      user.Gender,
+		UserRole:    user.UserRole,
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
+	}
+}
+
 // Register 用户注册
 func Register(c *gin.Context) {
 	var request models.UserRegister
@@ -45,7 +58,19 @@ func Login(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	ResponseSuccess(c, user)
+	ResponseSuccess(c, userToVo(user))
+}
+
+// Logout 用户退出
+func Logout(c *gin.Context) {
+	session := sessions.Default(c)
+	s := server.NewUserService()
+	result, err := s.Logout(c, session)
+	if err != nil {
+		ResponseFailed(c, ErrorPERATION)
+		return
+	}
+	ResponseSuccess(c, result)
 }
 
 // LoginUser 获取当前登录用户
@@ -57,5 +82,6 @@ func LoginUser(c *gin.Context) {
 		ResponseErrorWithMsg(c, ErrorNotFound, err.Error())
 		return
 	}
-	ResponseSuccess(c, user)
+
+	ResponseSuccess(c, userToVo(user))
 }
