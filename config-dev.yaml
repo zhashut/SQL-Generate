@@ -5,4 +5,4 @@ mysql:
     password: 12345
     port: 3306
     user: root
-port: 8103
+port: 8102

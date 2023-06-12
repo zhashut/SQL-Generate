@@ -25,7 +25,7 @@ func NewGeneratorFace() *GeneratorFace {
 // GenerateAll 生成所有内容
 func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Generate, error) {
 	// 校验
-	if err := validSchema(tableSchema); err != nil {
+	if err := ValidSchema(tableSchema); err != nil {
 		return nil, err
 	}
 	sqlBuilder := builder.NewSQLBuilder()
@@ -57,8 +57,8 @@ func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Ge
 	}, nil
 }
 
-// 校验 schema
-func validSchema(tableSchema *schema.TableSchema) error {
+// ValidSchema 校验 schema
+func ValidSchema(tableSchema *schema.TableSchema) error {
 	if tableSchema == nil {
 		return fmt.Errorf("failed valid schema")
 	}

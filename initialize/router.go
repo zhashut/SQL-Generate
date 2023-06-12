@@ -23,5 +23,6 @@ func Router() *gin.Engine {
 	apiGroup := r.Group("/api")
 	routers.InitGenerateSQL(apiGroup)
 	routers.InitUser(apiGroup)
+	routers.InitTable(apiGroup)
 	return r
 }
