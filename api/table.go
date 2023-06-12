@@ -51,3 +51,28 @@ func AddTableInfo(c *gin.Context) {
 	}
 	ResponseSuccess(c, result)
 }
+
+// GetMyTableInfoList 分页获取当前用户创建的资源列表
+func GetMyTableInfoList(c *gin.Context) {
+	var req models.TableInfoQueryRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	// TODO 获取登录用户id
+	//session := sessions.Default(c)
+	//us := server.NewUserService()
+	//user, err := us.GetLoginUser(c, session)
+	//if err != nil {
+	//	ResponseErrorWithMsg(c, ErrorNotLogin, err.Error())
+	//	return
+	//}
+	req.UserID = 6
+	s := server.NewTableService()
+	list, err := s.GetMyTableInfoList(c, &req)
+	if err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	ResponseSuccess(c, list)
+}

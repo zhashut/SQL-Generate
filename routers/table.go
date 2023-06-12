@@ -17,5 +17,6 @@ func InitTable(r *gin.RouterGroup) {
 	tableRouter := r.Group("/table_info")
 	{
 		tableRouter.POST("/add", api.AddTableInfo)
+		tableRouter.GET("/my/add/list/page", api.GetMyTableInfoList)
 	}
 }

@@ -3,12 +3,17 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"sql_generate/consts"
+	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
+	. "sql_generate/consts"
 	"sql_generate/core"
 	"sql_generate/core/schema"
+	"sql_generate/global"
 	"sql_generate/models"
 	"sql_generate/respository/db"
+	"strings"
 )
 
 /**
@@ -25,11 +30,61 @@ func NewTableService() *TableService {
 	return &TableService{}
 }
 
+// AddTableInfo 保存表
 func (s *TableService) AddTableInfo(ctx context.Context, t *models.TableInfo) (bool, error) {
 	if t == nil {
 		return false, fmt.Errorf("参数错误")
 	}
 	return db.AddTableInfo(ctx, t)
+}
+
+// GetMyTableInfoList TODO 分页获取当前用户创建的资源列表， 用户id是硬编码
+func (s *TableService) GetMyTableInfoList(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
+	var tableInfo []*models.TableInfo
+	db := global.DB.Where("userId = ?", req.UserID).Model(&models.TableInfo{})
+	var err error
+	db, err = GetQueryWrapper(db, req)
+	if err != nil {
+		return nil, err
+	}
+	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&tableInfo); res.Error != nil {
+		return nil, res.Error
+	}
+	return tableInfo, nil
+}
+
+// GetQueryWrapper 获取查询包装类
+func GetQueryWrapper(db *gorm.DB, tableInfoQueryRequest *models.TableInfoQueryRequest) (*gorm.DB, error) {
+	if tableInfoQueryRequest == nil {
+		return nil, errors.New("请求参数为空")
+	}
+	tableInfoQuery := &models.TableInfo{}
+	copier.Copy(tableInfoQuery, tableInfoQueryRequest)
+	sortField := tableInfoQueryRequest.SortField
+	sortOrder := tableInfoQueryRequest.SortOrder
+	name := tableInfoQuery.Name
+	content := tableInfoQuery.Content
+
+	// name、content 需支持模糊搜索
+	tableInfoQuery.Name = ""
+	tableInfoQuery.Content = ""
+
+	if name != "" {
+		db = db.Where("name LIKE ?", "%"+strings.TrimSpace(name)+"%")
+	}
+	if content != "" {
+		db = db.Where("content LIKE ?", "%"+strings.TrimSpace(content)+"%")
+	}
+	if sortField != "" {
+		order := sortField
+		if sortOrder == CommonConstToString[SORT_ORDER_ASC] {
+			order += " ASC"
+		} else {
+			order += " DESC"
+		}
+		db = db.Order(order)
+	}
+	return db, nil
 }
 
 // ValidAndHandleTableInfo 校验并处理 add - 是否为创建校验
@@ -60,7 +115,7 @@ func (s *TableService) ValidAndHandleTableInfo(ctx context.Context, tableInfo *m
 			return err
 		}
 	}
-	if reviewStatus >= 0 && !consts.GetReviewStatus(reviewStatus) {
+	if reviewStatus >= 0 && !GetReviewStatus(reviewStatus) {
 		return fmt.Errorf("请求参数错误")
 	}
 	return nil
