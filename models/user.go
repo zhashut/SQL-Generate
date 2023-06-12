@@ -13,7 +13,7 @@ import (
  */
 
 type User struct {
-	ID           int64     `gorm:"column:id;column:id;primaryKey;autoIncrement;not null comment 'id'" json:"id"`
+	ID           int64     `gorm:"column:id;primaryKey;autoIncrement;not null comment 'id'" json:"id"`
 	UserName     string    `gorm:"column:userName;type:varchar(256);comment '用户昵称'" json:"userName"`
 	UserAccount  string    `gorm:"column:userAccount;type:varchar(256);not null comment '账号'" json:"userAccount"`
 	UserPassword string    `gorm:"column:userPassword;type:varchar(256);not null comment '密码'" json:"userPassword"`
