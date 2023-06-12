@@ -1,6 +1,7 @@
 package global
 
 import (
+	"github.com/gin-contrib/sessions"
 	"gorm.io/gorm"
 	"sql_generate/config"
 )
@@ -16,4 +17,5 @@ import (
 var (
 	ServerConfig *config.ServerConfig = &config.ServerConfig{}
 	DB           *gorm.DB
+	Session      sessions.Session
 )

@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"sql_generate/global"
 	"sql_generate/models"
 	"sql_generate/server"
 )
@@ -47,13 +48,13 @@ func Register(c *gin.Context) {
 // Login 用户登录
 func Login(c *gin.Context) {
 	var request models.UserLogin
-	session := sessions.Default(c)
+	global.Session = sessions.Default(c)
 	if err := c.ShouldBind(&request); err != nil {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
 	s := server.NewUserService()
-	user, err := s.Login(c, request.UserAccount, request.Password, session)
+	user, err := s.Login(c, request.UserAccount, request.Password, global.Session)
 	if err != nil {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
@@ -61,27 +62,25 @@ func Login(c *gin.Context) {
 	ResponseSuccess(c, userToVo(user))
 }
 
-// Logout 用户退出
-func Logout(c *gin.Context) {
-	session := sessions.Default(c)
-	s := server.NewUserService()
-	result, err := s.Logout(c, session)
-	if err != nil {
-		ResponseFailed(c, ErrorPERATION)
-		return
-	}
-	ResponseSuccess(c, result)
-}
-
 // LoginUser 获取当前登录用户
 func LoginUser(c *gin.Context) {
-	session := sessions.Default(c)
 	s := server.NewUserService()
-	user, err := s.GetLoginUser(c, session)
+	user, err := s.GetLoginUser(c, global.Session)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorNotLogin, err.Error())
 		return
 	}
 
 	ResponseSuccess(c, userToVo(user))
+}
+
+// Logout 用户退出
+func Logout(c *gin.Context) {
+	s := server.NewUserService()
+	result, err := s.Logout(c, global.Session)
+	if err != nil {
+		ResponseFailed(c, ErrorPERATION)
+		return
+	}
+	ResponseSuccess(c, result)
 }

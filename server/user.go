@@ -67,7 +67,7 @@ func (s *UserService) Login(ctx context.Context, account, password string, sessi
 	if err != nil {
 		return nil, fmt.Errorf("账号或密码错误")
 	}
-	// 保存登录态 TODO 这里的 session 可能不是全局的，考虑做成全局 global
+	// 保存登录态
 	if res := session.Get(USER_LOGIN_STATE); res == nil {
 		session.Set(USER_LOGIN_STATE, user)
 		_ = session.Save()
@@ -75,7 +75,7 @@ func (s *UserService) Login(ctx context.Context, account, password string, sessi
 	return user, nil
 }
 
-// GetLoginUser 获取当前登录用户 TODO 这里获取不到登录用户
+// GetLoginUser 获取当前登录用户
 func (s *UserService) GetLoginUser(ctx context.Context, session sessions.Session) (*models.User, error) {
 	currentUser := session.Get(USER_LOGIN_STATE).(*models.User)
 	if currentUser == nil {
