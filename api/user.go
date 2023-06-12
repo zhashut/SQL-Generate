@@ -79,7 +79,7 @@ func LoginUser(c *gin.Context) {
 	s := server.NewUserService()
 	user, err := s.GetLoginUser(c, session)
 	if err != nil {
-		ResponseErrorWithMsg(c, ErrorNotFound, err.Error())
+		ResponseErrorWithMsg(c, ErrorNotLogin, err.Error())
 		return
 	}
 
