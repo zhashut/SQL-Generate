@@ -38,7 +38,7 @@ func (s *TableService) AddTableInfo(ctx context.Context, t *models.TableInfo) (b
 	return db.AddTableInfo(ctx, t)
 }
 
-// GetMyTableInfoList TODO 分页获取当前用户创建的资源列表， 用户id是硬编码
+// GetMyTableInfoList 分页获取当前用户创建的资源列表
 func (s *TableService) GetMyTableInfoList(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
 	var tableInfo []*models.TableInfo
 	db := global.DB.Where("userId = ?", req.UserID).Model(&models.TableInfo{})
