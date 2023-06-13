@@ -53,6 +53,38 @@ func (s *TableService) GetMyTableInfoList(ctx context.Context, req *models.Table
 	return tableInfo, nil
 }
 
+// GetTableInfoById 根据 id 获取 Table
+func (s *TableService) GetTableInfoById(ctx context.Context, id int64) (*models.TableInfo, error) {
+	if id <= 0 {
+		return nil, errors.New("请求参数错误")
+	}
+	resp, err := db.GetTableInfoByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("根据id查询Table错误：%v", err)
+	}
+	return resp, nil
+}
+
+// DeletedTableInfoByID 删除表记录
+func (s *TableService) DeletedTableInfoByID(ctx context.Context, id int64) (bool, error) {
+	return db.DeletedTableInfoByID(ctx, id)
+}
+
+// GetTableInfoList 分页获取列表
+func (s *TableService) GetTableInfoList(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
+	var tableInfo []*models.TableInfo
+	db := global.DB.Model(&models.TableInfo{})
+	var err error
+	db, err = GetQueryWrapper(db, req)
+	if err != nil {
+		return nil, err
+	}
+	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&tableInfo); res.Error != nil {
+		return nil, res.Error
+	}
+	return tableInfo, nil
+}
+
 // GetQueryWrapper 获取查询包装类
 func GetQueryWrapper(db *gorm.DB, tableInfoQueryRequest *models.TableInfoQueryRequest) (*gorm.DB, error) {
 	if tableInfoQueryRequest == nil {

@@ -22,3 +22,19 @@ func AddTableInfo(ctx context.Context, t *models.TableInfo) (bool, error) {
 	global.DB.Save(&t)
 	return true, nil
 }
+
+// GetTableInfoByID 根据 ID 获取 TableInfo
+func GetTableInfoByID(ctx context.Context, id int64) (*models.TableInfo, error) {
+	var tableInfo models.TableInfo
+	if res := global.DB.Where("id = ?", id).First(&tableInfo); res.Error != nil {
+		return nil, res.Error
+	}
+	return &tableInfo, nil
+}
+
+func DeletedTableInfoByID(ctx context.Context, id int64) (bool, error) {
+	if res := global.DB.Delete(&models.TableInfo{ID: id}); res.RowsAffected == 0 {
+		return false, fmt.Errorf("表记录不存在")
+	}
+	return true, nil
+}

@@ -18,5 +18,9 @@ func InitTable(r *gin.RouterGroup) {
 	{
 		tableRouter.POST("/add", api.AddTableInfo)
 		tableRouter.GET("/my/add/list/page", api.GetMyTableInfoList)
+		tableRouter.GET("/get", api.GetTableInfoByID)
+		tableRouter.POST("/generate/sql", api.GenerateCreateSql)
+		tableRouter.POST("/delete", api.DeletedTableInfo)
+		tableRouter.GET("/list/page", api.GetTableInfoList)
 	}
 }

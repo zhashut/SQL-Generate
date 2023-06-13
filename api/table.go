@@ -1,9 +1,14 @@
 package api
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"sql_generate/core/builder"
+	"sql_generate/core/schema"
+	"sql_generate/global"
 	"sql_generate/models"
 	"sql_generate/server"
+	"strconv"
 )
 
 /**
@@ -67,6 +72,117 @@ func GetMyTableInfoList(c *gin.Context) {
 	req.UserID = user.ID
 	s := server.NewTableService()
 	list, err := s.GetMyTableInfoList(c, &req)
+	if err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+
+	resp := &PageInfo{
+		Records:  list,
+		Pages:    req.Pages,
+		PageSize: req.PageSize,
+		Total:    int64(len(list)),
+	}
+	ResponseSuccess(c, resp)
+}
+
+// GetTableInfoByID 根据ID获取TableInfo
+func GetTableInfoByID(c *gin.Context) {
+	idStr := c.Query("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	s := server.NewTableService()
+	resp, err := s.GetTableInfoById(c, id)
+	if err != nil {
+		ResponseFailed(c, ErrorNotFound)
+		return
+	}
+	ResponseSuccess(c, resp)
+}
+
+// GenerateCreateSql 生成创建表的 SQL
+func GenerateCreateSql(c *gin.Context) {
+	data, err := c.GetRawData()
+	if err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	idStr := string(data)
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	s := server.NewTableService()
+	tableInfo, err := s.GetTableInfoById(c, id)
+	if err != nil {
+		ResponseFailed(c, ErrorNotFound)
+		return
+	}
+	// 将 Content Unmarshal到 schema 对象中
+	var tableSchema *schema.TableSchema
+	if err := json.Unmarshal([]byte(tableInfo.Content), &tableSchema); err != nil {
+		ResponseFailed(c, ErrorPERATION)
+		return
+	}
+	// 构造建表SQL
+	createTableSQL, err := builder.NewSQLBuilder().BuildCreateTableSql(tableSchema)
+	if err != nil {
+		ResponseFailed(c, ErrorPERATION)
+		return
+	}
+	ResponseSuccess(c, createTableSQL)
+}
+
+func DeletedTableInfo(c *gin.Context) {
+	var req models.OnlyIDRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	us := server.NewUserService()
+	user, err := us.GetLoginUser(c, global.Session)
+	if err != nil {
+		ResponseFailed(c, ErrorNotLogin)
+		return
+	}
+	// 判断是否存在
+	s := server.NewTableService()
+	tableInfo, err := s.GetTableInfoById(c, req.ID)
+	if err != nil {
+		ResponseFailed(c, ErrorNotFound)
+		return
+	}
+	// 仅本人或管理员可以删除
+	admin, err := us.IsAdmin(c, global.Session)
+	if err != nil {
+		ResponseFailed(c, ErrorNoAuth)
+		return
+	}
+	if tableInfo.UserId != user.ID && !admin {
+		ResponseFailed(c, ErrorNoAuth)
+		return
+	}
+	b, err := s.DeletedTableInfoByID(c, req.ID)
+	if err != nil {
+		ResponseFailed(c, ErrorPERATION)
+		return
+	}
+	ResponseSuccess(c, b)
+}
+
+// GetTableInfoList 分页获取列表
+func GetTableInfoList(c *gin.Context) {
+	var req models.TableInfoQueryRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	s := server.NewTableService()
+	list, err := s.GetTableInfoList(c, &req)
 	if err != nil {
 		ResponseFailed(c, ErrorInvalidParams)
 		return

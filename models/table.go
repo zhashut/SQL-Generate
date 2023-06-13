@@ -26,14 +26,14 @@ type TableInfo struct {
 }
 
 type TableInfoAddRequest struct {
-	Name    string `json:"name"`
-	Content string `json:"content"`
+	Name    string `form:"name" json:"name"`
+	Content string `form:"content" json:"content"`
 }
 
 type TableInfoQueryRequest struct {
-	Name         string `json:"name"`
-	Content      string `json:"content"`
-	ReviewStatus int    `json:"reviewStatus"`
-	UserID       int64  `json:"userId"`
+	Name         string `form:"name" json:"name"`
+	Content      string `form:"content" json:"content"`
+	ReviewStatus int    `form:"reviewStatus" json:"reviewStatus"`
+	UserID       int64  `form:"userId" json:"userId"`
 	PageRequest
 }

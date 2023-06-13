@@ -14,3 +14,8 @@ type PageRequest struct {
 	SortField string `json:"sortField"` // 排序字段
 	SortOrder string `json:"sortOrder"` // 排序顺序(默认升序)
 }
+
+// OnlyIDRequest 传递单个 id 的请求-通用
+type OnlyIDRequest struct {
+	ID int64 `form:"id" json:"id"`
+}
