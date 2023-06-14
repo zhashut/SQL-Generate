@@ -219,33 +219,11 @@ func getValueStr(field *schema.Field, value interface{}) string {
 		return "''"
 	}
 
-	fieldType := FieldTypeEnum(field.FieldType)
+	fieldType := GetFieldTypeEnumByValue(field.FieldType)
 	fieldValue := value.(string)
-	switch fieldType {
-	case DATETIME:
-	case TIMESTAMP:
-		if fieldValue != CURRENT_TIMESTAMP {
-			return fieldValue
-		} else {
-			return fmt.Sprintf("'%s'", fieldValue)
-		}
-	case DATE:
-	case TIME:
-	case CHAR:
-	case VARCHAR:
-	case TINYTEXT:
-	case TEXT:
-	case MEDIUMTEXT:
-	case LONGTEXT:
-	case TINYBLOB:
-	case BLOB:
-	case MEDIUMBLOB:
-	case LONGBLOB:
-	case BINARY:
-	case VARBINARY:
+	if _, ok := FieldTypeEnumStruct[fieldType]; ok {
 		return fmt.Sprintf("'%s'", fieldValue)
-	default:
+	} else {
 		return fieldValue
 	}
-	return fieldValue
 }

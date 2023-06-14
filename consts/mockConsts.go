@@ -10,15 +10,6 @@ package consts
 
 type MockType int32
 
-//const (
-//	NONE MockType = iota
-//	INCREASE
-//	FIXED
-//	RANDOM
-//	RULE
-//	DICT
-//)
-
 type MockTypeEnum string
 
 const (
@@ -58,10 +49,6 @@ func GetMockTypeEnumByValue(value string) MockTypeEnum {
 	return NONE
 }
 
-//func (m MockType) String() string {
-//	return [...]string{"不模拟", "递增", "固定", "随机", "规则", "词库"}[m]
-//}
-
 type FieldTypeEnum string
 
 const (
@@ -91,6 +78,80 @@ const (
 	BINARY     FieldTypeEnum = "binary"
 	VARBINARY  FieldTypeEnum = "varbinary"
 )
+
+var FieldTypeEnumToString = map[FieldTypeEnum]string{
+	TINYINT:    "tinyint",
+	SMALLINT:   "smallint",
+	MEDIUMINT:  "mediumint",
+	INT:        "int",
+	BIGINT:     "bigint",
+	FLOAT:      "float",
+	DOUBLE:     "double",
+	DECIMAL:    "decimal",
+	DATE:       "date",
+	TIME:       "time",
+	YEAR:       "year",
+	DATETIME:   "datetime",
+	TIMESTAMP:  "timestamp",
+	CHAR:       "char",
+	VARCHAR:    "varchar",
+	TINYTEXT:   "tinytext",
+	TEXT:       "text",
+	MEDIUMTEXT: "mediumtext",
+	LONGTEXT:   "longtext",
+	TINYBLOB:   "tinyblob",
+	BLOB:       "blob",
+	MEDIUMBLOB: "mediumblob",
+	LONGBLOB:   "longblob",
+	BINARY:     "binary",
+	VARBINARY:  "varbinary",
+}
+
+var FieldTypeStringToEnum = map[string]FieldTypeEnum{
+	"tinyint":    TINYINT,
+	"smallint":   SMALLINT,
+	"mediumint":  MEDIUMINT,
+	"int":        INT,
+	"bigint":     BIGINT,
+	"float":      FLOAT,
+	"double":     DOUBLE,
+	"decimal":    DECIMAL,
+	"date":       DATE,
+	"time":       TIME,
+	"year":       YEAR,
+	"datetime":   DATETIME,
+	"timestamp":  TIMESTAMP,
+	"char":       CHAR,
+	"varchar":    VARCHAR,
+	"tinytext":   TINYTEXT,
+	"text":       TEXT,
+	"mediumtext": MEDIUMTEXT,
+	"longtext":   LONGTEXT,
+	"tinyblob":   TINYBLOB,
+	"blob":       BLOB,
+	"mediumblob": MEDIUMBLOB,
+	"longblob":   LONGBLOB,
+	"binary":     BINARY,
+	"varbinary":  VARBINARY,
+}
+
+var FieldTypeEnumStruct = map[FieldTypeEnum]struct{}{
+	DATETIME:   {},
+	TIMESTAMP:  {},
+	DATE:       {},
+	TIME:       {},
+	CHAR:       {},
+	VARCHAR:    {},
+	TINYTEXT:   {},
+	TEXT:       {},
+	MEDIUMTEXT: {},
+	TINYBLOB:   {},
+	BLOB:       {},
+	MEDIUMBLOB: {},
+	LONGBLOB:   {},
+	BINARY:     {},
+	VARBINARY:  {},
+}
 
 type MockParamsRandomTypeEnum string
 
@@ -147,4 +208,14 @@ func GetMockParamsRandomTypeByValue(value string) MockParamsRandomTypeEnum {
 		}
 	}
 	return STRING
+}
+
+// GetFieldTypeEnumByValue 根据 value 获取枚举，默认返回 TEXT
+func GetFieldTypeEnumByValue(value string) FieldTypeEnum {
+	for mockNum, mockString := range FieldTypeEnumToString {
+		if value == mockString {
+			return mockNum
+		}
+	}
+	return TEXT
 }
