@@ -15,7 +15,7 @@ import (
  */
 
 type DataGenerator interface {
-	DoGenerate(field schema.Field, rowNum int32) []string
+	DoGenerate(field schema.Field, rowNum int32) ([]string, error)
 }
 
 var mockTypeDataGeneratorMap map[MockTypeEnum]DataGenerator
@@ -29,6 +29,7 @@ func init() {
 	mockTypeDataGeneratorMap[FIXED] = NewFixedDataGenerator()
 	mockTypeDataGeneratorMap[NONE] = NewDefaultDataGenerator()
 	mockTypeDataGeneratorMap[INCREASE] = NewIncreaseDataGenerator()
+	mockTypeDataGeneratorMap[DICT] = NewDictDataGenerator()
 }
 
 // GetGenerator 获取实例
