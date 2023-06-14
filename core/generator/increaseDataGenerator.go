@@ -19,7 +19,7 @@ func NewIncreaseDataGenerator() *IncreaseDataGenerator {
 	return &IncreaseDataGenerator{}
 }
 
-func (r *IncreaseDataGenerator) DoGenerate(field schema.Field, rowNum int32) []string {
+func (r *IncreaseDataGenerator) DoGenerate(field schema.Field, rowNum int32) ([]string, error) {
 	mockParams := field.MockParams
 	result := make([]string, 0, rowNum)
 	if mockParams == "" {
@@ -29,5 +29,5 @@ func (r *IncreaseDataGenerator) DoGenerate(field schema.Field, rowNum int32) []s
 	for i := 0; i < int(rowNum); i++ {
 		result = append(result, strconv.Itoa(initValue+i))
 	}
-	return result
+	return result, nil
 }

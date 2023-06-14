@@ -14,7 +14,7 @@ import (
  * Description: 数据生成器
  */
 
-func GenerateData(tableSchema *schema.TableSchema, rowNum int32) []map[string]interface{} {
+func GenerateData(tableSchema *schema.TableSchema, rowNum int32) ([]map[string]interface{}, error) {
 	fieldList := tableSchema.FieldList
 	// 初始化结果数据
 	resultList := make([]map[string]interface{}, rowNum)
@@ -25,8 +25,10 @@ func GenerateData(tableSchema *schema.TableSchema, rowNum int32) []map[string]in
 	for _, field := range fieldList {
 		mockTypeEnum := consts.GetMockTypeEnumByValue(field.MockType)
 		dataGenerator := generator.GetGenerator(mockTypeEnum)
-		// TODO 数据好像不太对
-		mockDataSlice := dataGenerator.DoGenerate(field, rowNum)
+		mockDataSlice, err := dataGenerator.DoGenerate(field, rowNum)
+		if err != nil {
+			return nil, err
+		}
 		fieldName := field.FieldName
 		if len(mockDataSlice) > 0 {
 			for i := 0; i < int(rowNum); i++ {
@@ -34,5 +36,5 @@ func GenerateData(tableSchema *schema.TableSchema, rowNum int32) []map[string]in
 			}
 		}
 	}
-	return resultList
+	return resultList, nil
 }

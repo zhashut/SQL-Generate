@@ -36,7 +36,10 @@ func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Ge
 	}
 	mockNum := tableSchema.MockNum
 	// 生成模拟数据
-	dataList := builder.GenerateData(tableSchema, mockNum)
+	dataList, err := builder.GenerateData(tableSchema, mockNum)
+	if err != nil {
+		return nil, err
+	}
 	// 生成插入 SQL
 	insertSQL, err := sqlBuilder.BuildInsertSQL(tableSchema, dataList)
 	if err != nil {

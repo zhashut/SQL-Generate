@@ -43,7 +43,7 @@ func (s *TableService) GetMyTableInfoList(ctx context.Context, req *models.Table
 	var tableInfo []*models.TableInfo
 	db := global.DB.Where("userId = ?", req.UserID).Model(&models.TableInfo{})
 	var err error
-	db, err = GetQueryWrapper(db, req)
+	db, err = s.GetTableQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (s *TableService) GetTableInfoList(ctx context.Context, req *models.TableIn
 	var tableInfo []*models.TableInfo
 	db := global.DB.Model(&models.TableInfo{})
 	var err error
-	db, err = GetQueryWrapper(db, req)
+	db, err = s.GetTableQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +85,8 @@ func (s *TableService) GetTableInfoList(ctx context.Context, req *models.TableIn
 	return tableInfo, nil
 }
 
-// GetQueryWrapper 获取查询包装类
-func GetQueryWrapper(db *gorm.DB, tableInfoQueryRequest *models.TableInfoQueryRequest) (*gorm.DB, error) {
+// GetTableQueryWrapper 获取查询包装类
+func (s *TableService) GetTableQueryWrapper(db *gorm.DB, tableInfoQueryRequest *models.TableInfoQueryRequest) (*gorm.DB, error) {
 	if tableInfoQueryRequest == nil {
 		return nil, errors.New("请求参数为空")
 	}

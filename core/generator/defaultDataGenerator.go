@@ -24,7 +24,7 @@ func NewDefaultDataGenerator() *DefaultDataGenerator {
 	return &DefaultDataGenerator{}
 }
 
-func (r *DefaultDataGenerator) DoGenerate(field schema.Field, rowNum int32) []string {
+func (r *DefaultDataGenerator) DoGenerate(field schema.Field, rowNum int32) ([]string, error) {
 	mockParams := field.MockParams
 	result := make([]string, 0, rowNum)
 	// 主键采用递增策略
@@ -36,7 +36,7 @@ func (r *DefaultDataGenerator) DoGenerate(field schema.Field, rowNum int32) []st
 		for i := 0; i < int(rowNum); i++ {
 			result = append(result, strconv.Itoa(initValue+i))
 		}
-		return result
+		return result, nil
 	}
 	// 使用默认值
 	defaultValue := field.DefaultValue
@@ -49,5 +49,5 @@ func (r *DefaultDataGenerator) DoGenerate(field schema.Field, rowNum int32) []st
 			result = append(result, defaultValue)
 		}
 	}
-	return result
+	return result, nil
 }
