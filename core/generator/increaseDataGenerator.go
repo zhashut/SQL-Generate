@@ -20,14 +20,13 @@ func NewIncreaseDataGenerator() *IncreaseDataGenerator {
 }
 
 func (r *IncreaseDataGenerator) DoGenerate(field schema.Field, rowNum int32) ([]string, error) {
-	mockParams := field.MockParams
+	mockParams := field.MockParams.(float64)
 	result := make([]string, 0, rowNum)
-	if mockParams == "" {
-		mockParams = "1"
+	if mockParams < 0 {
+		mockParams = 1
 	}
-	initValue, _ := strconv.Atoi(mockParams)
 	for i := 0; i < int(rowNum); i++ {
-		result = append(result, strconv.Itoa(initValue+i))
+		result = append(result, strconv.Itoa(int(mockParams)+i))
 	}
 	return result, nil
 }

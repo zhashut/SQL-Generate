@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"github.com/brianvoe/gofakeit/v6"
+	"math/rand"
 	. "sql_generate/consts"
 	"time"
 )
@@ -16,7 +17,8 @@ import (
  */
 
 func GetRandomValue(randomTypeEnum MockParamsRandomTypeEnum) string {
-	defaultValue := MockParamsRandomTypeEnumToString[STRING]
+	defaultValues := []string{"lily", "lele", "john", "jack", "ani"}
+	defaultValue := defaultValues[rand.Intn(len(defaultValues))]
 	if randomTypeEnum == "" {
 		return defaultValue
 	}

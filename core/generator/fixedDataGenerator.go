@@ -17,7 +17,7 @@ func NewFixedDataGenerator() *FixedDataGenerator {
 }
 
 func (r *FixedDataGenerator) DoGenerate(field schema.Field, rowNum int32) ([]string, error) {
-	mockParams := field.MockParams
+	mockParams := field.MockParams.(string)
 	if mockParams == "" {
 		mockParams = "6"
 	}

@@ -21,7 +21,7 @@ func NewRandomDataGenerator() *RandomDataGenerator {
 }
 
 func (r *RandomDataGenerator) DoGenerate(field schema.Field, rowNum int32) ([]string, error) {
-	mockParams := field.MockParams
+	mockParams := field.MockParams.(string)
 	result := make([]string, 0, rowNum)
 	for i := 0; i < int(rowNum); i++ {
 		randomTypeEnum := consts.GetMockParamsRandomTypeByValue(mockParams)
