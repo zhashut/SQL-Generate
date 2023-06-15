@@ -141,11 +141,8 @@ func (s *SQLBuilder) buildCreateFieldSQL(field *schema.Field) (string, error) {
 }
 
 // BuildInsertSQL 构造插入数据 SQL
-// e.g. INSERT INTO report (id, content) VALUES (1, "瑶瑶最好了")
+// e.g. INSERT INTO report (id, content) VALUES (1, "最好了")
 func (s *SQLBuilder) BuildInsertSQL(tableSchema *schema.TableSchema, dataList []map[string]interface{}) (string, error) {
-	if len(dataList) < 1 {
-		return "", fmt.Errorf("BuildInsertSQL: dataList len is %d", len(dataList))
-	}
 	// 构造表名
 	tableName := s.SQLDialect.WrapTableName(tableSchema.TableName)
 	dbName := tableSchema.DBName
