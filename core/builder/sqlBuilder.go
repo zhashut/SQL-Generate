@@ -69,7 +69,7 @@ func (s *SQLBuilder) BuildCreateTableSql(tableSchema *schema.TableSchema) (strin
 	fieldStrBuilder := strings.Builder{}
 	for i := 0; i < fieldSize; i++ {
 		field := fieldList[i]
-		createSQLStr, err := s.buildCreateFieldSQL(&field)
+		createSQLStr, err := s.BuildCreateFieldSQL(&field)
 		if err != nil {
 			return "", err
 		}
@@ -91,8 +91,8 @@ func (s *SQLBuilder) BuildCreateTableSql(tableSchema *schema.TableSchema) (strin
 	return result, nil
 }
 
-// 生成创建字段的 SQL
-func (s *SQLBuilder) buildCreateFieldSQL(field *schema.Field) (string, error) {
+// BuildCreateFieldSQL 生成创建字段的 SQL
+func (s *SQLBuilder) BuildCreateFieldSQL(field *schema.Field) (string, error) {
 	if field == nil {
 		return "", fmt.Errorf("buildCreateFieldSQL: 请求参数错误")
 	}

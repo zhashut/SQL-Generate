@@ -180,13 +180,10 @@ func (s *DictService) GetDictListPage(ctx context.Context, req *models.DictQuery
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get login user: %v", err)
-	}
-	req.UserID = user.ID
 	dicts, err := db.GetDictListPage(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get DictListPage: %v", err)
+	}
 	return dicts, nil
 }
 
