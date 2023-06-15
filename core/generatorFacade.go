@@ -25,7 +25,7 @@ func NewGeneratorFace() *GeneratorFace {
 // GenerateAll 生成所有内容
 func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Generate, error) {
 	// 校验
-	if err := ValidSchema(tableSchema); err != nil {
+	if err := g.ValidSchema(tableSchema); err != nil {
 		return nil, err
 	}
 	sqlBuilder := builder.NewSQLBuilder()
@@ -61,7 +61,7 @@ func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Ge
 }
 
 // ValidSchema 校验 schema
-func ValidSchema(tableSchema *schema.TableSchema) error {
+func (g *GeneratorFace) ValidSchema(tableSchema *schema.TableSchema) error {
 	if tableSchema == nil {
 		return fmt.Errorf("failed valid schema")
 	}
@@ -83,7 +83,7 @@ func ValidSchema(tableSchema *schema.TableSchema) error {
 		return fmt.Errorf("字段列表不能为空")
 	}
 	for _, field := range fieldList {
-		err := validField(field)
+		err := g.ValidField(field)
 		if err != nil {
 			return err
 		}
@@ -91,8 +91,8 @@ func ValidSchema(tableSchema *schema.TableSchema) error {
 	return nil
 }
 
-// 检验字段
-func validField(field schema.Field) error {
+// ValidField 检验字段
+func (g *GeneratorFace) ValidField(field schema.Field) error {
 	fieldName := field.FieldName
 	fieldType := field.FieldType
 	if fieldName == "" {

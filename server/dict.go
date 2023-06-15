@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-contrib/sessions"
 	"github.com/jinzhu/copier"
 	"regexp"
 	. "sql_generate/consts"
@@ -28,15 +27,6 @@ import (
 type DictService struct {
 	UserResolver     UserResolver
 	GenerateResolver GenerateResolver
-}
-
-type UserResolver interface {
-	GetLoginUser(ctx context.Context, session sessions.Session) (*models.User, error)
-	IsAdmin(ctx context.Context, session sessions.Session) (bool, error)
-}
-
-type GenerateResolver interface {
-	GenerateAll(tableSchema *schema.TableSchema) (*models.Generate, error)
 }
 
 func NewDictService() *DictService {
@@ -163,12 +153,12 @@ func (s *DictService) GetMyDictList(ctx context.Context, req *models.DictQueryRe
 	}
 	dictList = append(dictList, myDictList...)
 	// 根据id去重
-	dicts := deduplicate(dictList)
+	dicts := dictDeduplicate(dictList)
 	return dicts, nil
 }
 
 // 根据id去重
-func deduplicate(dictList []*models.Dict) []*models.Dict {
+func dictDeduplicate(dictList []*models.Dict) []*models.Dict {
 	dictMap := make(map[int64]*models.Dict)
 
 	for _, dict := range dictList {
@@ -275,9 +265,9 @@ func (s *DictService) ValidAndHandleDict(ctx context.Context, dict *models.Dict,
 			return fmt.Errorf("cannot marshal wordsList: %v", err)
 		}
 		dict.Content = string(content)
-		if reviewStatus >= 0 && !GetReviewStatus(reviewStatus) {
-			return fmt.Errorf("请求参数错误")
-		}
+	}
+	if reviewStatus >= 0 && !GetReviewStatus(reviewStatus) {
+		return fmt.Errorf("请求参数错误")
 	}
 	return nil
 }
