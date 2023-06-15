@@ -16,6 +16,10 @@ import (
  * Description: 用户相关api
  */
 
+var (
+	userService = server.NewUserService()
+)
+
 func userToVo(user *models.User) *models.UserVo {
 	return &models.UserVo{
 		ID:          user.ID,
@@ -36,8 +40,7 @@ func Register(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	s := server.NewUserService()
-	resp, err := s.Register(c, &request)
+	resp, err := userService.Register(c, &request)
 	if err != nil {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
@@ -53,8 +56,7 @@ func Login(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	s := server.NewUserService()
-	user, err := s.Login(c, request.UserAccount, request.Password, global.Session)
+	user, err := userService.Login(c, request.UserAccount, request.Password, global.Session)
 	if err != nil {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
@@ -64,8 +66,7 @@ func Login(c *gin.Context) {
 
 // LoginUser 获取当前登录用户
 func LoginUser(c *gin.Context) {
-	s := server.NewUserService()
-	user, err := s.GetLoginUser(c, global.Session)
+	user, err := userService.GetLoginUser(c, global.Session)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorNotLogin, err.Error())
 		return
@@ -76,8 +77,7 @@ func LoginUser(c *gin.Context) {
 
 // Logout 用户退出
 func Logout(c *gin.Context) {
-	s := server.NewUserService()
-	result, err := s.Logout(c, global.Session)
+	result, err := userService.Logout(c, global.Session)
 	if err != nil {
 		ResponseFailed(c, ErrorPERATION)
 		return

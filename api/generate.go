@@ -15,12 +15,15 @@ import (
  * Description: 数据生成器api
  */
 
+var (
+	generator = core.NewGeneratorFace()
+)
+
 func GenerateSQL(c *gin.Context) {
 	var tableSchema schema.TableSchema
 	if err := c.ShouldBind(&tableSchema); err != nil {
 		ResponseFailed(c, ErrorInvalidParams)
 	}
-	generator := core.NewGeneratorFace()
 	all, err := generator.GenerateAll(&tableSchema)
 	zap.S().Infof("GenerateAll.result: %v", all)
 	if err != nil {

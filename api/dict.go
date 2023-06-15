@@ -16,7 +16,7 @@ import (
  */
 
 var (
-	s = server.NewDictService()
+	dictService = server.NewDictService()
 )
 
 // AddDict 添加词条
@@ -26,7 +26,7 @@ func AddDict(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	id, err := s.AddDict(c, &req)
+	id, err := dictService.AddDict(c, &req)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -42,7 +42,7 @@ func GetDictByID(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	dict, err := s.GetDictByID(c, id)
+	dict, err := dictService.GetDictByID(c, id)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -57,7 +57,7 @@ func DeletedDict(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	b, err := s.DeleteDict(c, &req)
+	b, err := dictService.DeleteDict(c, &req)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -72,7 +72,7 @@ func GetMyAddDictListPage(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	dictList, err := s.GetMyAddDictListPage(c, &req)
+	dictList, err := dictService.GetMyAddDictListPage(c, &req)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -93,7 +93,7 @@ func GetMyDictListPage(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	dictList, err := s.GetMyDictListPage(c, &req)
+	dictList, err := dictService.GetMyDictListPage(c, &req)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -114,7 +114,7 @@ func GetMyDictList(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	dictList, err := s.GetMyDictList(c, &req)
+	dictList, err := dictService.GetMyDictList(c, &req)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -129,7 +129,7 @@ func GetDictListPage(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	dictList, err := s.GetDictListPage(c, &req)
+	dictList, err := dictService.GetDictListPage(c, &req)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -156,7 +156,7 @@ func GenerateDictCreateSql(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	resp, err := s.GenerateCreateSQL(c, id)
+	resp, err := dictService.GenerateCreateSQL(c, id)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return

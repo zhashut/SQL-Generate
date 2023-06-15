@@ -1,11 +1,7 @@
 package api
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"sql_generate/core/builder"
-	"sql_generate/core/schema"
-	"sql_generate/global"
 	"sql_generate/models"
 	"sql_generate/server"
 	"strconv"
@@ -19,74 +15,26 @@ import (
  * Description: No Description
  */
 
-// AddTableInfo  保存表
-func AddTableInfo(c *gin.Context) {
-	var request models.TableInfoAddRequest
-	if err := c.ShouldBind(&request); err != nil {
-		ResponseFailed(c, ErrorInvalidParams)
-		return
-	}
-	s := server.NewTableService()
-	tableInfo := &models.TableInfo{
-		Name:    request.Name,
-		Content: request.Content,
-	}
-	// 检验
-	if err := s.ValidAndHandleTableInfo(c, tableInfo, true); err != nil {
-		ResponseErrorWithMsg(c, ErrorInvalidParams, err.Error())
-		return
-	}
-	// 获取当前用户
-	user, err := GetUserBySession(c)
-	if err != nil {
-		ResponseFailed(c, ErrorNotLogin)
-		return
-	}
-	tableInfo.UserId = user.ID
-	// 保存表
-	result, err := s.AddTableInfo(c, tableInfo)
-	if err != nil {
-		ResponseErrorWithMsg(c, ErrorInvalidParams, err.Error())
-		return
-	}
-	if !result {
-		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
-		return
-	}
-	ResponseSuccess(c, result)
-}
+var (
+	tableService = server.NewTableService()
+)
 
-// GetMyTableInfoList 分页获取当前用户创建的资源列表
-func GetMyTableInfoList(c *gin.Context) {
-	var req models.TableInfoQueryRequest
+// AddTableInfo 添加表
+func AddTableInfo(c *gin.Context) {
+	var req models.TableInfoAddRequest
 	if err := c.ShouldBind(&req); err != nil {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	// 获取当前登录用户
-	user, err := GetUserBySession(c)
+	id, err := tableService.AddTableInfo(c, &req)
 	if err != nil {
-		ResponseErrorWithMsg(c, ErrorNotLogin, err.Error())
+		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
 	}
-	req.UserID = user.ID
-	s := server.NewTableService()
-	list, err := s.GetMyTableInfoList(c, &req)
-	if err != nil {
-		ResponseFailed(c, ErrorInvalidParams)
-		return
-	}
-
-	resp := &PageInfo{
-		Records:  list,
-		Pages:    req.Pages,
-		PageSize: req.PageSize,
-		Total:    int64(len(list)),
-	}
-	ResponseSuccess(c, resp)
+	ResponseSuccess(c, id)
 }
 
-// GetTableInfoByID 根据ID获取TableInfo
+// GetTableInfoByID 根据id获取表
 func GetTableInfoByID(c *gin.Context) {
 	idStr := c.Query("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -94,17 +42,109 @@ func GetTableInfoByID(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	s := server.NewTableService()
-	resp, err := s.GetTableInfoById(c, id)
+	dict, err := tableService.GetTableInfoByID(c, id)
 	if err != nil {
-		ResponseFailed(c, ErrorNotFound)
+		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
+	}
+	ResponseSuccess(c, dict)
+}
+
+// DeletedTableInfo 删除表
+func DeletedTableInfo(c *gin.Context) {
+	var req models.OnlyIDRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	b, err := tableService.DeleteTableInfo(c, &req)
+	if err != nil {
+		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
+		return
+	}
+	ResponseSuccess(c, b)
+}
+
+// GetMyAddTableInfoListPage 分页获取当前用户创建的资源列表
+func GetMyAddTableInfoListPage(c *gin.Context) {
+	var req models.TableInfoQueryRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	fieldList, err := tableService.GetMyAddTableInfoListPage(c, &req)
+	if err != nil {
+		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
+		return
+	}
+	resp := &PageInfo{
+		Records:  fieldList,
+		Pages:    req.Pages,
+		PageSize: req.PageSize,
+		Total:    int64(len(fieldList)),
 	}
 	ResponseSuccess(c, resp)
 }
 
-// GenerateCreateSql 生成创建表的 SQL
-func GenerateCreateSql(c *gin.Context) {
+// GetMyTableInfoListPage 分页获取当前用户可选的资源列表
+func GetMyTableInfoListPage(c *gin.Context) {
+	var req models.TableInfoQueryRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	fieldList, err := tableService.GetMyTableInfoListPage(c, &req)
+	if err != nil {
+		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
+		return
+	}
+	resp := &PageInfo{
+		Records:  fieldList,
+		Pages:    req.Pages,
+		PageSize: req.PageSize,
+		Total:    int64(len(fieldList)),
+	}
+	ResponseSuccess(c, resp)
+}
+
+// GetMyTableInfoList 获取当前用户可选的全部资源列表（只返回 id 和名称）
+func GetMyTableInfoList(c *gin.Context) {
+	var req models.TableInfoQueryRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	fieldList, err := tableService.GetMyTableInfoList(c, &req)
+	if err != nil {
+		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
+		return
+	}
+	ResponseSuccess(c, fieldList)
+}
+
+// GetTableInfoListPage 分页获取列表
+func GetTableInfoListPage(c *gin.Context) {
+	var req models.TableInfoQueryRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	fieldList, err := tableService.GetTableInfoListPage(c, &req)
+	if err != nil {
+		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
+		return
+	}
+	resp := &PageInfo{
+		Records:  fieldList,
+		Pages:    req.Pages,
+		PageSize: req.PageSize,
+		Total:    int64(len(fieldList)),
+	}
+	ResponseSuccess(c, resp)
+}
+
+// GenerateTableInfoCreateSql 生成创建表的 SQL
+func GenerateTableInfoCreateSql(c *gin.Context) {
 	data, err := c.GetRawData()
 	if err != nil {
 		ResponseFailed(c, ErrorInvalidParams)
@@ -116,83 +156,10 @@ func GenerateCreateSql(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	s := server.NewTableService()
-	tableInfo, err := s.GetTableInfoById(c, id)
+	resp, err := tableService.GenerateCreateSQL(c, id)
 	if err != nil {
-		ResponseFailed(c, ErrorNotFound)
+		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
-	}
-	// 将 Content Unmarshal到 schema 对象中
-	var tableSchema *schema.TableSchema
-	if err := json.Unmarshal([]byte(tableInfo.Content), &tableSchema); err != nil {
-		ResponseFailed(c, ErrorPERATION)
-		return
-	}
-	// 构造建表SQL
-	createTableSQL, err := builder.NewSQLBuilder().BuildCreateTableSql(tableSchema)
-	if err != nil {
-		ResponseFailed(c, ErrorPERATION)
-		return
-	}
-	ResponseSuccess(c, createTableSQL)
-}
-
-func DeletedTableInfo(c *gin.Context) {
-	var req models.OnlyIDRequest
-	if err := c.ShouldBind(&req); err != nil {
-		ResponseFailed(c, ErrorInvalidParams)
-		return
-	}
-	us := server.NewUserService()
-	user, err := us.GetLoginUser(c, global.Session)
-	if err != nil {
-		ResponseFailed(c, ErrorNotLogin)
-		return
-	}
-	// 判断是否存在
-	s := server.NewTableService()
-	tableInfo, err := s.GetTableInfoById(c, req.ID)
-	if err != nil {
-		ResponseFailed(c, ErrorNotFound)
-		return
-	}
-	// 仅本人或管理员可以删除
-	admin, err := us.IsAdmin(c, global.Session)
-	if err != nil {
-		ResponseFailed(c, ErrorNoAuth)
-		return
-	}
-	if tableInfo.UserId != user.ID && !admin {
-		ResponseFailed(c, ErrorNoAuth)
-		return
-	}
-	b, err := s.DeletedTableInfoByID(c, req.ID)
-	if err != nil {
-		ResponseFailed(c, ErrorPERATION)
-		return
-	}
-	ResponseSuccess(c, b)
-}
-
-// GetTableInfoList 分页获取列表
-func GetTableInfoList(c *gin.Context) {
-	var req models.TableInfoQueryRequest
-	if err := c.ShouldBind(&req); err != nil {
-		ResponseFailed(c, ErrorInvalidParams)
-		return
-	}
-	s := server.NewTableService()
-	list, err := s.GetTableInfoList(c, &req)
-	if err != nil {
-		ResponseFailed(c, ErrorInvalidParams)
-		return
-	}
-
-	resp := &PageInfo{
-		Records:  list,
-		Pages:    req.Pages,
-		PageSize: req.PageSize,
-		Total:    int64(len(list)),
 	}
 	ResponseSuccess(c, resp)
 }

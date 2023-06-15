@@ -10,17 +10,19 @@ import (
  * @author: 炸薯条
  * Date: 2023/6/11
  * Time: 19:51
- * Description: No Description
+ * Description: 表相关路由
  */
 
 func InitTable(r *gin.RouterGroup) {
 	tableRouter := r.Group("/table_info")
 	{
 		tableRouter.POST("/add", api.AddTableInfo)
-		tableRouter.GET("/my/add/list/page", api.GetMyTableInfoList)
+		tableRouter.GET("/my/add/list/page", api.GetMyAddTableInfoListPage)
+		tableRouter.GET("/my/list/page", api.GetMyTableInfoListPage)
 		tableRouter.GET("/get", api.GetTableInfoByID)
-		tableRouter.POST("/generate/sql", api.GenerateCreateSql)
+		tableRouter.POST("/generate/sql", api.GenerateTableInfoCreateSql)
 		tableRouter.POST("/delete", api.DeletedTableInfo)
-		tableRouter.GET("/list/page", api.GetTableInfoList)
+		tableRouter.GET("/list/page", api.GetTableInfoListPage)
+		tableRouter.GET("/my/list", api.GetMyTableInfoList)
 	}
 }
