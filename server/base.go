@@ -24,6 +24,11 @@ type UserResolver interface {
 type GenerateResolver interface {
 	GenerateAll(tableSchema *schema.TableSchema) (*models.Generate, error)
 	ValidField(field schema.Field) error
+	ValidSchema(tableSchema *schema.TableSchema) error
+}
+
+type BuilderResolver interface {
+	BuildCreateFieldSQL(field *schema.Field) (string, error)
 }
 
 // Paginate 封装分页方法
