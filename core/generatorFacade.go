@@ -71,7 +71,8 @@ func ValidSchema(tableSchema *schema.TableSchema) error {
 	}
 	mockNum := tableSchema.MockNum
 	// 默认生成 20 条
-	if mockNum == 0 {
+	if tableSchema.MockNum == 0 {
+		tableSchema.MockNum = 20
 		mockNum = 20
 	}
 	if mockNum > 100 || mockNum < 10 {
