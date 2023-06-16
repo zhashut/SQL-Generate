@@ -14,7 +14,14 @@ import (
  * Description: 数据生成器
  */
 
-func GenerateData(tableSchema *schema.TableSchema, rowNum int32) ([]map[string]interface{}, error) {
+type DataBuilder struct {
+}
+
+func NewDataBuilder() *DataBuilder {
+	return &DataBuilder{}
+}
+
+func (s *DataBuilder) GenerateData(tableSchema *schema.TableSchema, rowNum int32) ([]map[string]interface{}, error) {
 	fieldList := tableSchema.FieldList
 	// 初始化结果数据
 	resultList := make([]map[string]interface{}, rowNum)

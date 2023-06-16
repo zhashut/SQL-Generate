@@ -10,7 +10,14 @@ import "encoding/json"
  * Description: 数据 JSON 生成器
  */
 
-func BuildJSON(dataList []map[string]interface{}) (string, error) {
+type JsonBuilder struct {
+}
+
+func NewJsonBuilder() *JsonBuilder {
+	return &JsonBuilder{}
+}
+
+func (s *JsonBuilder) BuildJSON(dataList []map[string]interface{}) (string, error) {
 	jsonData, err := json.MarshalIndent(dataList, "", "  ")
 	if err != nil {
 		return "", err

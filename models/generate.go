@@ -19,3 +19,7 @@ type Generate struct {
 	InsertSQL   string                   `json:"insertSql"`
 	DataJson    string                   `json:"dataJson"`
 }
+
+type GenerateByAutoRequest struct {
+	Content string `json:"content"`
+}

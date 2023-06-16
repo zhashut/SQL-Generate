@@ -17,5 +17,6 @@ func InitGenerateSQL(r *gin.RouterGroup) {
 	sqlRouter := r.Group("/sql")
 	{
 		sqlRouter.POST("/generate/schema", api.GenerateSQL)
+		sqlRouter.POST("/get/schema/auto", api.GetSchemaByAuto)
 	}
 }

@@ -16,10 +16,17 @@ import (
  */
 
 type GeneratorFace struct {
+	SQLBuilder  *builder.SQLBuilder
+	DataBuilder *builder.DataBuilder
+	JsonBuilder *builder.JsonBuilder
 }
 
 func NewGeneratorFace() *GeneratorFace {
-	return &GeneratorFace{}
+	return &GeneratorFace{
+		SQLBuilder:  builder.NewSQLBuilder(),
+		DataBuilder: builder.NewDataBuilder(),
+		JsonBuilder: builder.NewJsonBuilder(),
+	}
 }
 
 // GenerateAll 生成所有内容
@@ -28,25 +35,24 @@ func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Ge
 	if err := g.ValidSchema(tableSchema); err != nil {
 		return nil, err
 	}
-	sqlBuilder := builder.NewSQLBuilder()
 	// 生成创建 SQL
-	createSQL, err := sqlBuilder.BuildCreateTableSql(tableSchema)
+	createSQL, err := g.SQLBuilder.BuildCreateTableSql(tableSchema)
 	if err != nil {
 		return nil, err
 	}
 	mockNum := tableSchema.MockNum
 	// 生成模拟数据
-	dataList, err := builder.GenerateData(tableSchema, mockNum)
+	dataList, err := g.DataBuilder.GenerateData(tableSchema, mockNum)
 	if err != nil {
 		return nil, err
 	}
 	// 生成插入 SQL
-	insertSQL, err := sqlBuilder.BuildInsertSQL(tableSchema, dataList)
+	insertSQL, err := g.SQLBuilder.BuildInsertSQL(tableSchema, dataList)
 	if err != nil {
 		return nil, err
 	}
 	// 生成数据 Json
-	dataJson, err := builder.BuildJSON(dataList)
+	dataJson, err := g.JsonBuilder.BuildJSON(dataList)
 	if err != nil {
 		return nil, fmt.Errorf("dataJson 生成失败")
 	}

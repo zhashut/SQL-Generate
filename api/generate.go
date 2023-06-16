@@ -4,7 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"sql_generate/core"
+	"sql_generate/core/builder"
 	"sql_generate/core/schema"
+	"sql_generate/models"
 )
 
 /**
@@ -31,4 +33,20 @@ func GenerateSQL(c *gin.Context) {
 	}
 
 	ResponseSuccess(c, all)
+}
+
+// GetSchemaByAuto 智能导入
+func GetSchemaByAuto(c *gin.Context) {
+	var req models.GenerateByAutoRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	schemaBuilder := builder.TableSchemaBuilder{}
+	auto, err := schemaBuilder.BuildFromAuto(req.Content)
+	if err != nil {
+		ResponseFailed(c, ErrorPERATION)
+		return
+	}
+	ResponseSuccess(c, auto)
 }
