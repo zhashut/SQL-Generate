@@ -15,13 +15,15 @@ import (
  * Description: 获取词条链表
  */
 
-type DictService struct{}
+type DictService struct {
+	DB *db.DictDao
+}
 
 func (s DictService) GetWordList(ctx context.Context, id int64) ([]string, error) {
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid id: %v", id)
 	}
-	dict, err := db.GetDictByID(ctx, id)
+	dict, err := s.DB.GetDictByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get dict: %v", err)
 	}

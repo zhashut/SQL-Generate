@@ -25,6 +25,7 @@ import (
  */
 
 type DictService struct {
+	DB               *db.DictDao
 	UserResolver     UserResolver
 	GenerateResolver GenerateResolver
 }
@@ -50,7 +51,7 @@ func (s *DictService) AddDict(ctx context.Context, dictAddReq *models.DictAddReq
 		return 0, fmt.Errorf("cannot get login user: %v", err)
 	}
 	dict.UserId = user.ID
-	result, err := db.AddDict(ctx, dict)
+	result, err := s.DB.AddDict(ctx, dict)
 	if !result || err != nil {
 		return 0, fmt.Errorf("cannot add dict: %v", err)
 	}
@@ -62,7 +63,7 @@ func (s *DictService) GetDictByID(ctx context.Context, id int64) (*models.Dict, 
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid id: %v", id)
 	}
-	dict, err := db.GetDictByID(ctx, id)
+	dict, err := s.DB.GetDictByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get dict: %v", err)
 	}
@@ -80,7 +81,7 @@ func (s *DictService) DeleteDict(ctx context.Context, req *models.OnlyIDRequest)
 		return false, fmt.Errorf("cannot get login user: %v", err)
 	}
 	// 判断是否存在
-	dict, err := db.GetDictByID(ctx, req.ID)
+	dict, err := s.DB.GetDictByID(ctx, req.ID)
 	if err != nil {
 		return false, fmt.Errorf("cannot get dict: %v", err)
 	}
@@ -89,7 +90,7 @@ func (s *DictService) DeleteDict(ctx context.Context, req *models.OnlyIDRequest)
 	if dict.UserId != user.ID && !admin {
 		return false, fmt.Errorf("not access delete dict")
 	}
-	b, err := db.DeletedDictByID(ctx, dict.ID)
+	b, err := s.DB.DeletedDictByID(ctx, dict.ID)
 	if err != nil {
 		return false, fmt.Errorf("cannot delete dict: %v", err)
 	}
@@ -107,7 +108,7 @@ func (s *DictService) GetMyAddDictListPage(ctx context.Context, req *models.Dict
 		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
 	req.UserID = user.ID
-	dicts, err := db.GetMyAddDictListPage(ctx, req)
+	dicts, err := s.DB.GetMyAddDictListPage(ctx, req)
 	return dicts, nil
 }
 
@@ -123,7 +124,7 @@ func (s *DictService) GetMyDictListPage(ctx context.Context, req *models.DictQue
 	}
 	req.UserID = user.ID
 	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	dicts, err := db.GetMyDictListPage(ctx, req)
+	dicts, err := s.DB.GetMyDictListPage(ctx, req)
 	return dicts, nil
 }
 
@@ -135,7 +136,7 @@ func (s *DictService) GetMyDictList(ctx context.Context, req *models.DictQueryRe
 	dictList := make([]*models.Dict, 0)
 	// 先查询审核通过的
 	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	passDictList, err := db.GetMyDictList(ctx, req, false)
+	passDictList, err := s.DB.GetMyDictList(ctx, req, false)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get pass dict list: %v", err)
 	}
@@ -147,7 +148,7 @@ func (s *DictService) GetMyDictList(ctx context.Context, req *models.DictQueryRe
 	}
 	req.ReviewStatus = ReviewStatusEnumToInt[REVIEWING]
 	req.UserID = user.ID
-	myDictList, err := db.GetMyDictList(ctx, req, true)
+	myDictList, err := s.DB.GetMyDictList(ctx, req, true)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get my dict list: %v", err)
 	}
@@ -180,7 +181,7 @@ func (s *DictService) GetDictListPage(ctx context.Context, req *models.DictQuery
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	dicts, err := db.GetDictListPage(ctx, req)
+	dicts, err := s.DB.GetDictListPage(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get DictListPage: %v", err)
 	}
@@ -192,7 +193,7 @@ func (s *DictService) GenerateCreateSQL(ctx context.Context, id int64) (*models.
 	if id <= 0 {
 		return nil, fmt.Errorf("incorrect request parameters: %v", id)
 	}
-	dict, err := db.GetDictByID(ctx, id)
+	dict, err := s.DB.GetDictByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get dict: %v", err)
 	}

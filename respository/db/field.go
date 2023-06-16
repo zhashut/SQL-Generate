@@ -20,8 +20,10 @@ import (
  * Description: 字段模块的数据处理
  */
 
+type FieldDao struct{}
+
 // AddField 添加字段
-func AddField(ctx context.Context, f *models.FieldInfo) (bool, error) {
+func (dao *FieldDao) AddField(ctx context.Context, f *models.FieldInfo) (bool, error) {
 	if res := global.DB.Where("name = ? and userId = ?", f.Name, f.UserId).First(&models.FieldInfo{}); res.RowsAffected > 0 {
 		return false, fmt.Errorf("字段名称已存在")
 	}
@@ -30,7 +32,7 @@ func AddField(ctx context.Context, f *models.FieldInfo) (bool, error) {
 }
 
 // GetFieldByID 根据 ID 获取字段
-func GetFieldByID(ctx context.Context, id int64) (*models.FieldInfo, error) {
+func (dao *FieldDao) GetFieldByID(ctx context.Context, id int64) (*models.FieldInfo, error) {
 	var field models.FieldInfo
 	if res := global.DB.Where("id = ?", id).First(&field); res.Error != nil {
 		return nil, res.Error
@@ -39,7 +41,7 @@ func GetFieldByID(ctx context.Context, id int64) (*models.FieldInfo, error) {
 }
 
 // DeletedFieldByID 删除字段
-func DeletedFieldByID(ctx context.Context, id int64) (bool, error) {
+func (dao *FieldDao) DeletedFieldByID(ctx context.Context, id int64) (bool, error) {
 	if res := global.DB.Delete(&models.FieldInfo{ID: id}); res.RowsAffected == 0 {
 		return false, fmt.Errorf("字段不存在")
 	}
@@ -47,11 +49,11 @@ func DeletedFieldByID(ctx context.Context, id int64) (bool, error) {
 }
 
 // GetMyAddFieldListPage 分页获取当前用户创建的资源列表
-func GetMyAddFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest) ([]*models.FieldInfo, error) {
+func (dao *FieldDao) GetMyAddFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest) ([]*models.FieldInfo, error) {
 	var fieldList []*models.FieldInfo
 	db := global.DB.Where("userId = ?", req.UserID).Model(&models.FieldInfo{})
 	var err error
-	db, err = GetFieldQueryWrapper(db, req)
+	db, err = dao.GetFieldQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +64,11 @@ func GetMyAddFieldListPage(ctx context.Context, req *models.FieldInfoQueryReques
 }
 
 // GetMyFieldListPage 分页获取当前用户可选的资源列表
-func GetMyFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest) ([]*models.FieldInfo, error) {
+func (dao *FieldDao) GetMyFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest) ([]*models.FieldInfo, error) {
 	var fieldList []*models.FieldInfo
 	db := global.DB.Where("userId = ?", req.UserID).Or("reviewStatus = ?", req.ReviewStatus).Model(&models.FieldInfo{})
 	var err error
-	db, err = GetFieldQueryWrapper(db, req)
+	db, err = dao.GetFieldQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -77,13 +79,13 @@ func GetMyFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest) 
 }
 
 // GetMyFieldList 获取当前用户可选的全部资源列表（只返回 id 和名称）
-func GetMyFieldList(ctx context.Context, req *models.FieldInfoQueryRequest, isUser bool) ([]*models.FieldInfo, error) {
+func (dao *FieldDao) GetMyFieldList(ctx context.Context, req *models.FieldInfoQueryRequest, isUser bool) ([]*models.FieldInfo, error) {
 	var fieldList []*models.FieldInfo
 	// isUser 为 false 就是查询审核通过的，为true就是查询本人的
 	if !isUser {
 		db := global.DB.Where("reviewStatus = ?", ReviewStatusEnumToInt[PASS]).Model(&models.FieldInfo{})
 		var err error
-		db, err = GetFieldQueryWrapper(db, req)
+		db, err = dao.GetFieldQueryWrapper(db, req)
 		if err != nil {
 			return nil, err
 		}
@@ -105,11 +107,11 @@ func GetMyFieldList(ctx context.Context, req *models.FieldInfoQueryRequest, isUs
 }
 
 // GetFieldListPage 分页获取列表
-func GetFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest) ([]*models.FieldInfo, error) {
+func (dao *FieldDao) GetFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest) ([]*models.FieldInfo, error) {
 	var fieldList []*models.FieldInfo
 	db := global.DB.Model(&models.FieldInfo{})
 	var err error
-	db, err = GetFieldQueryWrapper(db, req)
+	db, err = dao.GetFieldQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -119,8 +121,8 @@ func GetFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest) ([
 	return fieldList, nil
 }
 
-// GetFieldQueryWrapper 获取查询包装类
-func GetFieldQueryWrapper(db *gorm.DB, fieldQueryRequest *models.FieldInfoQueryRequest) (*gorm.DB, error) {
+// dao.GetFieldQueryWrapper 获取查询包装类
+func (dao *FieldDao) GetFieldQueryWrapper(db *gorm.DB, fieldQueryRequest *models.FieldInfoQueryRequest) (*gorm.DB, error) {
 	if fieldQueryRequest == nil {
 		return nil, errors.New("请求参数为空")
 	}

@@ -19,8 +19,10 @@ import (
  * Description: No Description
  */
 
+type TableDao struct{}
+
 // AddTableInfo 添加表
-func AddTableInfo(ctx context.Context, d *models.TableInfo) (bool, error) {
+func (dao *TableDao) AddTableInfo(ctx context.Context, d *models.TableInfo) (bool, error) {
 	if res := global.DB.Where("name = ? and userId = ?", d.Name, d.UserId).First(&models.TableInfo{}); res.RowsAffected > 0 {
 		return false, fmt.Errorf("表名称已存在")
 	}
@@ -29,7 +31,7 @@ func AddTableInfo(ctx context.Context, d *models.TableInfo) (bool, error) {
 }
 
 // GetTableInfoByID 根据 ID 获取表
-func GetTableInfoByID(ctx context.Context, id int64) (*models.TableInfo, error) {
+func (dao *TableDao) GetTableInfoByID(ctx context.Context, id int64) (*models.TableInfo, error) {
 	var table models.TableInfo
 	if res := global.DB.Where("id = ?", id).First(&table); res.Error != nil {
 		return nil, res.Error
@@ -38,7 +40,7 @@ func GetTableInfoByID(ctx context.Context, id int64) (*models.TableInfo, error) 
 }
 
 // DeletedTableInfoByID 删除表
-func DeletedTableInfoByID(ctx context.Context, id int64) (bool, error) {
+func (dao *TableDao) DeletedTableInfoByID(ctx context.Context, id int64) (bool, error) {
 	if res := global.DB.Delete(&models.TableInfo{ID: id}); res.RowsAffected == 0 {
 		return false, fmt.Errorf("表不存在")
 	}
@@ -46,11 +48,11 @@ func DeletedTableInfoByID(ctx context.Context, id int64) (bool, error) {
 }
 
 // GetMyAddTableInfoListPage 分页获取当前用户创建的资源列表
-func GetMyAddTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
+func (dao *TableDao) GetMyAddTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
 	var tableList []*models.TableInfo
 	db := global.DB.Where("userId = ?", req.UserID).Model(&models.TableInfo{})
 	var err error
-	db, err = GetTableQueryWrapper(db, req)
+	db, err = dao.GetTableQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -61,11 +63,11 @@ func GetMyAddTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRe
 }
 
 // GetMyTableInfoListPage 分页获取当前用户可选的资源列表
-func GetMyTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
+func (dao *TableDao) GetMyTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
 	var tableList []*models.TableInfo
 	db := global.DB.Where("userId = ?", req.UserID).Or("reviewStatus = ?", req.ReviewStatus).Model(&models.TableInfo{})
 	var err error
-	db, err = GetTableQueryWrapper(db, req)
+	db, err = dao.GetTableQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -76,13 +78,13 @@ func GetMyTableInfoListPage(ctx context.Context, req *models.TableInfoQueryReque
 }
 
 // GetMyTableInfoList 获取当前用户可选的全部资源列表（只返回 id 和名称）
-func GetMyTableInfoList(ctx context.Context, req *models.TableInfoQueryRequest, isUser bool) ([]*models.TableInfo, error) {
+func (dao *TableDao) GetMyTableInfoList(ctx context.Context, req *models.TableInfoQueryRequest, isUser bool) ([]*models.TableInfo, error) {
 	var tableList []*models.TableInfo
 	// isUser 为 false 就是查询审核通过的，为true就是查询本人的
 	if !isUser {
 		db := global.DB.Where("reviewStatus = ?", ReviewStatusEnumToInt[PASS]).Model(&models.TableInfo{})
 		var err error
-		db, err = GetTableQueryWrapper(db, req)
+		db, err = dao.GetTableQueryWrapper(db, req)
 		if err != nil {
 			return nil, err
 		}
@@ -104,11 +106,11 @@ func GetMyTableInfoList(ctx context.Context, req *models.TableInfoQueryRequest, 
 }
 
 // GetTableInfoListPage 分页获取列表
-func GetTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
+func (dao *TableDao) GetTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
 	var tableList []*models.TableInfo
 	db := global.DB.Model(&models.TableInfo{})
 	var err error
-	db, err = GetTableQueryWrapper(db, req)
+	db, err = dao.GetTableQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +121,7 @@ func GetTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest
 }
 
 // GetTableQueryWrapper 获取查询包装类
-func GetTableQueryWrapper(db *gorm.DB, tableInfoQueryRequest *models.TableInfoQueryRequest) (*gorm.DB, error) {
+func (dao *TableDao) GetTableQueryWrapper(db *gorm.DB, tableInfoQueryRequest *models.TableInfoQueryRequest) (*gorm.DB, error) {
 	if tableInfoQueryRequest == nil {
 		return nil, fmt.Errorf("请求参数为空")
 	}

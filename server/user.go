@@ -19,7 +19,9 @@ import (
  * Description: 用户模块的业务层
  */
 
-type UserService struct{}
+type UserService struct {
+	DB *db.UserDao
+}
 
 func NewUserService() *UserService {
 	return &UserService{}
@@ -44,7 +46,7 @@ func (s *UserService) Register(ctx context.Context, u *models.UserRegister) (*in
 		return nil, fmt.Errorf("两次输入的密码不一致")
 	}
 	password := encryptPassword(u.Password)
-	uid, err := db.CreateUser(ctx, u.UserName, u.UserAccount, password)
+	uid, err := s.DB.CreateUser(ctx, u.UserName, u.UserAccount, password)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +65,7 @@ func (s *UserService) Login(ctx context.Context, account, password string, sessi
 		return nil, fmt.Errorf("密码不得少于8位")
 	}
 	md5Pwd := encryptPassword(password)
-	user, err := db.GetUserWithPassword(ctx, account, md5Pwd)
+	user, err := s.DB.GetUserWithPassword(ctx, account, md5Pwd)
 	if err != nil {
 		return nil, fmt.Errorf("账号或密码错误")
 	}
@@ -81,7 +83,7 @@ func (s *UserService) GetLoginUser(ctx context.Context, session sessions.Session
 	if currentUser == nil {
 		return nil, fmt.Errorf("未登录")
 	}
-	user, err := db.GetUserByID(ctx, currentUser.ID)
+	user, err := s.DB.GetUserByID(ctx, currentUser.ID)
 	if err != nil {
 		return nil, fmt.Errorf("获取用户失败")
 	}

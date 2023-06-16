@@ -23,6 +23,7 @@ import (
  */
 
 type FieldService struct {
+	DB               *db.FieldDao
 	UserResolver     UserResolver
 	GenerateResolver GenerateResolver
 	BuilderResolver  BuilderResolver
@@ -53,7 +54,7 @@ func (s *FieldService) AddField(ctx context.Context, fieldAddReq *models.FieldIn
 		return 0, fmt.Errorf("cannot get login user: %v", err)
 	}
 	field.UserId = user.ID
-	result, err := db.AddField(ctx, field)
+	result, err := s.DB.AddField(ctx, field)
 	if !result || err != nil {
 		return 0, fmt.Errorf("cannot add field: %v", err)
 	}
@@ -65,7 +66,7 @@ func (s *FieldService) GetFieldByID(ctx context.Context, id int64) (*models.Fiel
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid id: %v", id)
 	}
-	field, err := db.GetFieldByID(ctx, id)
+	field, err := s.DB.GetFieldByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get field: %v", err)
 	}
@@ -83,7 +84,7 @@ func (s *FieldService) DeleteField(ctx context.Context, req *models.OnlyIDReques
 		return false, fmt.Errorf("cannot get login user: %v", err)
 	}
 	// 判断是否存在
-	field, err := db.GetFieldByID(ctx, req.ID)
+	field, err := s.DB.GetFieldByID(ctx, req.ID)
 	if err != nil {
 		return false, fmt.Errorf("cannot get field: %v", err)
 	}
@@ -92,7 +93,7 @@ func (s *FieldService) DeleteField(ctx context.Context, req *models.OnlyIDReques
 	if field.UserId != user.ID && !admin {
 		return false, fmt.Errorf("not access delete field")
 	}
-	b, err := db.DeletedFieldByID(ctx, field.ID)
+	b, err := s.DB.DeletedFieldByID(ctx, field.ID)
 	if err != nil {
 		return false, fmt.Errorf("cannot delete field: %v", err)
 	}
@@ -110,7 +111,7 @@ func (s *FieldService) GetMyAddFieldListPage(ctx context.Context, req *models.Fi
 		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
 	req.UserID = user.ID
-	fields, err := db.GetMyAddFieldListPage(ctx, req)
+	fields, err := s.DB.GetMyAddFieldListPage(ctx, req)
 	return fields, nil
 }
 
@@ -126,7 +127,7 @@ func (s *FieldService) GetMyFieldListPage(ctx context.Context, req *models.Field
 	}
 	req.UserID = user.ID
 	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	fields, err := db.GetMyFieldListPage(ctx, req)
+	fields, err := s.DB.GetMyFieldListPage(ctx, req)
 	return fields, nil
 }
 
@@ -138,7 +139,7 @@ func (s *FieldService) GetMyFieldList(ctx context.Context, req *models.FieldInfo
 	fieldList := make([]*models.FieldInfo, 0)
 	// 先查询审核通过的
 	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	passFieldList, err := db.GetMyFieldList(ctx, req, false)
+	passFieldList, err := s.DB.GetMyFieldList(ctx, req, false)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get pass field list: %v", err)
 	}
@@ -150,7 +151,7 @@ func (s *FieldService) GetMyFieldList(ctx context.Context, req *models.FieldInfo
 	}
 	req.ReviewStatus = ReviewStatusEnumToInt[REVIEWING]
 	req.UserID = user.ID
-	myFieldList, err := db.GetMyFieldList(ctx, req, true)
+	myFieldList, err := s.DB.GetMyFieldList(ctx, req, true)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get my field list: %v", err)
 	}
@@ -183,7 +184,7 @@ func (s *FieldService) GetFieldListPage(ctx context.Context, req *models.FieldIn
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	fields, err := db.GetFieldListPage(ctx, req)
+	fields, err := s.DB.GetFieldListPage(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get FieldListPage: %v", err)
 	}
@@ -195,7 +196,7 @@ func (s *FieldService) GenerateCreateSQL(ctx context.Context, id int64) (string,
 	if id <= 0 {
 		return "", fmt.Errorf("incorrect request parameters: %v", id)
 	}
-	field, err := db.GetFieldByID(ctx, id)
+	field, err := s.DB.GetFieldByID(ctx, id)
 	if err != nil {
 		return "", fmt.Errorf("cannot get field: %v", err)
 	}

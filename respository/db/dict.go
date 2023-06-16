@@ -20,8 +20,10 @@ import (
  * Description: No Description
  */
 
+type DictDao struct{}
+
 // AddDict 添加词条
-func AddDict(ctx context.Context, d *models.Dict) (bool, error) {
+func (dao *DictDao) AddDict(ctx context.Context, d *models.Dict) (bool, error) {
 	if res := global.DB.Where("name = ? and userId = ?", d.Name, d.UserId).First(&models.Dict{}); res.RowsAffected > 0 {
 		return false, fmt.Errorf("词条名称已存在")
 	}
@@ -30,7 +32,7 @@ func AddDict(ctx context.Context, d *models.Dict) (bool, error) {
 }
 
 // GetDictByID 根据 ID 获取词条
-func GetDictByID(ctx context.Context, id int64) (*models.Dict, error) {
+func (dao *DictDao) GetDictByID(ctx context.Context, id int64) (*models.Dict, error) {
 	var dict models.Dict
 	if res := global.DB.Where("id = ?", id).First(&dict); res.Error != nil {
 		return nil, res.Error
@@ -39,7 +41,7 @@ func GetDictByID(ctx context.Context, id int64) (*models.Dict, error) {
 }
 
 // DeletedDictByID 删除词条
-func DeletedDictByID(ctx context.Context, id int64) (bool, error) {
+func (dao *DictDao) DeletedDictByID(ctx context.Context, id int64) (bool, error) {
 	if res := global.DB.Delete(&models.Dict{ID: id}); res.RowsAffected == 0 {
 		return false, fmt.Errorf("词条不存在")
 	}
@@ -47,11 +49,11 @@ func DeletedDictByID(ctx context.Context, id int64) (bool, error) {
 }
 
 // GetMyAddDictListPage 分页获取当前用户创建的资源列表
-func GetMyAddDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]*models.Dict, error) {
+func (dao *DictDao) GetMyAddDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]*models.Dict, error) {
 	var dictList []*models.Dict
 	db := global.DB.Where("userId = ?", req.UserID).Model(&models.Dict{})
 	var err error
-	db, err = GetDictQueryWrapper(db, req)
+	db, err = dao.GetDictQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +64,11 @@ func GetMyAddDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]
 }
 
 // GetMyDictListPage 分页获取当前用户可选的资源列表
-func GetMyDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]*models.Dict, error) {
+func (dao *DictDao) GetMyDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]*models.Dict, error) {
 	var dictList []*models.Dict
 	db := global.DB.Where("userId = ?", req.UserID).Or("reviewStatus = ?", req.ReviewStatus).Model(&models.Dict{})
 	var err error
-	db, err = GetDictQueryWrapper(db, req)
+	db, err = dao.GetDictQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -77,13 +79,13 @@ func GetMyDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]*mo
 }
 
 // GetMyDictList 获取当前用户可选的全部资源列表（只返回 id 和名称）
-func GetMyDictList(ctx context.Context, req *models.DictQueryRequest, isUser bool) ([]*models.Dict, error) {
+func (dao *DictDao) GetMyDictList(ctx context.Context, req *models.DictQueryRequest, isUser bool) ([]*models.Dict, error) {
 	var dictList []*models.Dict
 	// isUser 为 false 就是查询审核通过的，为true就是查询本人的
 	if !isUser {
 		db := global.DB.Where("reviewStatus = ?", ReviewStatusEnumToInt[PASS]).Model(&models.Dict{})
 		var err error
-		db, err = GetDictQueryWrapper(db, req)
+		db, err = dao.GetDictQueryWrapper(db, req)
 		if err != nil {
 			return nil, err
 		}
@@ -105,11 +107,11 @@ func GetMyDictList(ctx context.Context, req *models.DictQueryRequest, isUser boo
 }
 
 // GetDictListPage 分页获取列表
-func GetDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]*models.Dict, error) {
+func (dao *DictDao) GetDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]*models.Dict, error) {
 	var dictList []*models.Dict
 	db := global.DB.Model(&models.Dict{})
 	var err error
-	db, err = GetDictQueryWrapper(db, req)
+	db, err = dao.GetDictQueryWrapper(db, req)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +122,7 @@ func GetDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]*mode
 }
 
 // GetDictQueryWrapper 获取查询包装类
-func GetDictQueryWrapper(db *gorm.DB, dictQueryRequest *models.DictQueryRequest) (*gorm.DB, error) {
+func (dao *DictDao) GetDictQueryWrapper(db *gorm.DB, dictQueryRequest *models.DictQueryRequest) (*gorm.DB, error) {
 	if dictQueryRequest == nil {
 		return nil, errors.New("请求参数为空")
 	}

@@ -15,8 +15,10 @@ import (
  * Description: user模块的数据处理
  */
 
+type UserDao struct{}
+
 // CreateUser 新建用户
-func CreateUser(ctx context.Context, name, account, password string) (int64, error) {
+func (dao *UserDao) CreateUser(ctx context.Context, name, account, password string) (int64, error) {
 	var user models.User
 	if res := global.DB.Where(&models.User{UserAccount: account}).First(&user); res.RowsAffected > 0 {
 		return user.ID, fmt.Errorf("用户已经存在")
@@ -30,7 +32,7 @@ func CreateUser(ctx context.Context, name, account, password string) (int64, err
 }
 
 // GetUserWithPassword 根据账号密码查询用户
-func GetUserWithPassword(ctx context.Context, account, password string) (*models.User, error) {
+func (dao *UserDao) GetUserWithPassword(ctx context.Context, account, password string) (*models.User, error) {
 	var user models.User
 	if res := global.DB.Where("userAccount = ? and userPassword = ?", account, password).First(&user); res.Error != nil {
 		return nil, res.Error
@@ -39,7 +41,7 @@ func GetUserWithPassword(ctx context.Context, account, password string) (*models
 }
 
 // GetUserByID 根据ID查询用户
-func GetUserByID(ctx context.Context, id int64) (*models.User, error) {
+func (dao *UserDao) GetUserByID(ctx context.Context, id int64) (*models.User, error) {
 	var user models.User
 	if res := global.DB.Where(&models.User{ID: id}).First(&user); res.Error != nil {
 		return nil, res.Error

@@ -23,6 +23,7 @@ import (
  */
 
 type TableService struct {
+	DB               *db.TableDao
 	UserResolver     UserResolver
 	GenerateResolver GenerateResolver
 	BuilderResolver  BuilderResolver
@@ -50,7 +51,7 @@ func (s *TableService) AddTableInfo(ctx context.Context, tableAddReq *models.Tab
 		return 0, fmt.Errorf("cannot get login user: %v", err)
 	}
 	table.UserId = user.ID
-	result, err := db.AddTableInfo(ctx, table)
+	result, err := s.DB.AddTableInfo(ctx, table)
 	if !result || err != nil {
 		return 0, fmt.Errorf("cannot add table: %v", err)
 	}
@@ -62,7 +63,7 @@ func (s *TableService) GetTableInfoByID(ctx context.Context, id int64) (*models.
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid id: %v", id)
 	}
-	table, err := db.GetTableInfoByID(ctx, id)
+	table, err := s.DB.GetTableInfoByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get table: %v", err)
 	}
@@ -80,7 +81,7 @@ func (s *TableService) DeleteTableInfo(ctx context.Context, req *models.OnlyIDRe
 		return false, fmt.Errorf("cannot get login user: %v", err)
 	}
 	// 判断是否存在
-	table, err := db.GetTableInfoByID(ctx, req.ID)
+	table, err := s.DB.GetTableInfoByID(ctx, req.ID)
 	if err != nil {
 		return false, fmt.Errorf("cannot get table: %v", err)
 	}
@@ -89,7 +90,7 @@ func (s *TableService) DeleteTableInfo(ctx context.Context, req *models.OnlyIDRe
 	if table.UserId != user.ID && !admin {
 		return false, fmt.Errorf("not access delete table")
 	}
-	b, err := db.DeletedTableInfoByID(ctx, table.ID)
+	b, err := s.DB.DeletedTableInfoByID(ctx, table.ID)
 	if err != nil {
 		return false, fmt.Errorf("cannot delete table: %v", err)
 	}
@@ -107,7 +108,7 @@ func (s *TableService) GetMyAddTableInfoListPage(ctx context.Context, req *model
 		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
 	req.UserID = user.ID
-	tables, err := db.GetMyAddTableInfoListPage(ctx, req)
+	tables, err := s.DB.GetMyAddTableInfoListPage(ctx, req)
 	return tables, nil
 }
 
@@ -123,7 +124,7 @@ func (s *TableService) GetMyTableInfoListPage(ctx context.Context, req *models.T
 	}
 	req.UserID = user.ID
 	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	tables, err := db.GetMyTableInfoListPage(ctx, req)
+	tables, err := s.DB.GetMyTableInfoListPage(ctx, req)
 	return tables, nil
 }
 
@@ -135,7 +136,7 @@ func (s *TableService) GetMyTableInfoList(ctx context.Context, req *models.Table
 	tableList := make([]*models.TableInfo, 0)
 	// 先查询审核通过的
 	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	passTableInfoList, err := db.GetMyTableInfoList(ctx, req, false)
+	passTableInfoList, err := s.DB.GetMyTableInfoList(ctx, req, false)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get pass table list: %v", err)
 	}
@@ -147,7 +148,7 @@ func (s *TableService) GetMyTableInfoList(ctx context.Context, req *models.Table
 	}
 	req.ReviewStatus = ReviewStatusEnumToInt[REVIEWING]
 	req.UserID = user.ID
-	myTableInfoList, err := db.GetMyTableInfoList(ctx, req, true)
+	myTableInfoList, err := s.DB.GetMyTableInfoList(ctx, req, true)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get my table list: %v", err)
 	}
@@ -180,7 +181,7 @@ func (s *TableService) GetTableInfoListPage(ctx context.Context, req *models.Tab
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	tables, err := db.GetTableInfoListPage(ctx, req)
+	tables, err := s.DB.GetTableInfoListPage(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get TableInfoListPage: %v", err)
 	}
@@ -192,7 +193,7 @@ func (s *TableService) GenerateCreateSQL(ctx context.Context, id int64) (string,
 	if id <= 0 {
 		return "", fmt.Errorf("incorrect request parameters: %v", id)
 	}
-	table, err := db.GetTableInfoByID(ctx, id)
+	table, err := s.DB.GetTableInfoByID(ctx, id)
 	if err != nil {
 		return "", fmt.Errorf("cannot get table: %v", err)
 	}
