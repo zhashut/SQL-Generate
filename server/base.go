@@ -22,7 +22,7 @@ type UserResolver interface {
 
 type GenerateResolver interface {
 	GenerateAll(tableSchema *schema.TableSchema) (*models.Generate, error)
-	ValidField(field schema.Field) error
+	ValidField(field *schema.Field) error
 	ValidSchema(tableSchema *schema.TableSchema) error
 }
 

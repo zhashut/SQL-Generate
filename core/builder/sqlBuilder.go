@@ -69,7 +69,7 @@ func (s *SQLBuilder) BuildCreateTableSql(tableSchema *schema.TableSchema) (strin
 	fieldStrBuilder := strings.Builder{}
 	for i := 0; i < fieldSize; i++ {
 		field := fieldList[i]
-		createSQLStr, err := s.BuildCreateFieldSQL(&field)
+		createSQLStr, err := s.BuildCreateFieldSQL(field)
 		if err != nil {
 			return "", err
 		}
@@ -152,7 +152,7 @@ func (s *SQLBuilder) BuildInsertSQL(tableSchema *schema.TableSchema, dataList []
 	// 构造表字段
 	fieldList := tableSchema.FieldList
 	// 过滤不模拟的字段
-	tmpList := make([]schema.Field, 0)
+	tmpList := make([]*schema.Field, 0)
 	for _, field := range fieldList {
 		typeEnum := MockTypeStringToEnum[field.MockType]
 		if typeEnum != NONE {
@@ -187,7 +187,7 @@ func fieldAppend(fieldStrList *strings.Builder, fields ...string) {
 }
 
 // 获取字段键
-func (s *SQLBuilder) getKeyStrWithJoin(fieldList []schema.Field) string {
+func (s *SQLBuilder) getKeyStrWithJoin(fieldList []*schema.Field) string {
 	builder := strings.Builder{}
 	for i, field := range fieldList {
 		if i > 0 {
@@ -199,13 +199,13 @@ func (s *SQLBuilder) getKeyStrWithJoin(fieldList []schema.Field) string {
 }
 
 // 获取字段值
-func (s *SQLBuilder) getValueStrWithJoin(dataRow map[string]interface{}, fieldList []schema.Field) string {
+func (s *SQLBuilder) getValueStrWithJoin(dataRow map[string]interface{}, fieldList []*schema.Field) string {
 	builder := strings.Builder{}
 	for i, field := range fieldList {
 		if i > 0 {
 			builder.WriteString(", ")
 		}
-		builder.WriteString(getValueStr(&field, dataRow[field.FieldName]))
+		builder.WriteString(getValueStr(field, dataRow[field.FieldName]))
 	}
 	return builder.String()
 }

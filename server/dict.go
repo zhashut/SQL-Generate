@@ -202,7 +202,7 @@ func (s *DictService) GenerateCreateSQL(ctx context.Context, id int64) (*models.
 	name := dict.Name
 	tableSchema.TableName = "dict"
 	tableSchema.TableComment = name
-	fieldList := make([]schema.Field, 0)
+	fieldList := make([]*schema.Field, 0)
 	var idField schema.Field
 	idField.FieldName = "id"
 	idField.FieldType = "bigint"
@@ -216,7 +216,7 @@ func (s *DictService) GenerateCreateSQL(ctx context.Context, id int64) (*models.
 	dataField.Comment = "数据"
 	dataField.MockType = MockTypeEnumToString[DICT]
 	dataField.MockParams = strconv.Itoa(int(id))
-	fieldList = append(fieldList, idField, dataField)
+	fieldList = append(fieldList, &idField, &dataField)
 	tableSchema.FieldList = fieldList
 	all, err := s.GenerateResolver.GenerateAll(tableSchema)
 	if err != nil {

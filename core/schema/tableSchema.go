@@ -10,11 +10,11 @@ package schema
 
 // TableSchema 表概要
 type TableSchema struct {
-	DBName       string  `form:"dbName" json:"dbName"`             // 库名
-	TableName    string  `form:"tableName" json:"tableName"`       // 表名
-	TableComment string  `form:"tableComment" json:"tableComment"` // 表注释
-	MockNum      int32   `form:"mockNum" json:"mockNum"`           // 模拟数据条数
-	FieldList    []Field `form:"fieldList" json:"fieldList"`       // 列表信息
+	DBName       string   `form:"dbName" json:"dbName"`             // 库名
+	TableName    string   `form:"tableName" json:"tableName"`       // 表名
+	TableComment string   `form:"tableComment" json:"tableComment"` // 表注释
+	MockNum      int32    `form:"mockNum" json:"mockNum"`           // 模拟数据条数
+	FieldList    []*Field `form:"fieldList" json:"fieldList"`       // 列表信息
 }
 
 // Field 列信息列表

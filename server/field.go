@@ -235,7 +235,7 @@ func (s *FieldService) ValidAndHandleField(ctx context.Context, field *models.Fi
 		if err := json.Unmarshal([]byte(content), &schemaField); err != nil {
 			return fmt.Errorf("cannot unmarshal conetent: %v", err)
 		}
-		if err := s.GenerateResolver.ValidField(schemaField); err != nil {
+		if err := s.GenerateResolver.ValidField(&schemaField); err != nil {
 			return fmt.Errorf("failed ValidField field: %v", err)
 		}
 		// 填充 fieldName

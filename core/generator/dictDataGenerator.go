@@ -30,7 +30,7 @@ func NewDictDataGenerator() *DictDataGenerator {
 	}
 }
 
-func (r *DictDataGenerator) DoGenerate(field schema.Field, rowNum int32) ([]string, error) {
+func (r *DictDataGenerator) DoGenerate(field *schema.Field, rowNum int32) ([]string, error) {
 	mockParams := field.MockParams.(float64)
 	wordList, err := r.DictServiceInterface.GetWordList(context.Background(), int64(mockParams))
 	if err != nil {

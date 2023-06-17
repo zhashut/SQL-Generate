@@ -98,7 +98,7 @@ func (g *GeneratorFace) ValidSchema(tableSchema *schema.TableSchema) error {
 }
 
 // ValidField 检验字段
-func (g *GeneratorFace) ValidField(field schema.Field) error {
+func (g *GeneratorFace) ValidField(field *schema.Field) error {
 	fieldName := field.FieldName
 	fieldType := field.FieldType
 	if fieldName == "" {

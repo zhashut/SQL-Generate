@@ -18,7 +18,8 @@ import (
  */
 
 var (
-	generator = core.NewGeneratorFace()
+	generator          = core.NewGeneratorFace()
+	tableSchemaBuilder = builder.NewTableSchemaBuilder()
 )
 
 func GenerateSQL(c *gin.Context) {
@@ -42,8 +43,7 @@ func GetSchemaByAuto(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	schemaBuilder := builder.TableSchemaBuilder{}
-	auto, err := schemaBuilder.BuildFromAuto(req.Content)
+	auto, err := tableSchemaBuilder.BuildFromAuto(req.Content)
 	if err != nil {
 		ResponseFailed(c, ErrorPERATION)
 		return

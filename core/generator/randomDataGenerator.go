@@ -20,7 +20,7 @@ func NewRandomDataGenerator() *RandomDataGenerator {
 	return &RandomDataGenerator{}
 }
 
-func (r *RandomDataGenerator) DoGenerate(field schema.Field, rowNum int32) ([]string, error) {
+func (r *RandomDataGenerator) DoGenerate(field *schema.Field, rowNum int32) ([]string, error) {
 	mockParams := field.MockParams.(string)
 	result := make([]string, 0, rowNum)
 	for i := 0; i < int(rowNum); i++ {

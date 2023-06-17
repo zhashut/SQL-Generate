@@ -19,7 +19,7 @@ func NewIncreaseDataGenerator() *IncreaseDataGenerator {
 	return &IncreaseDataGenerator{}
 }
 
-func (r *IncreaseDataGenerator) DoGenerate(field schema.Field, rowNum int32) ([]string, error) {
+func (r *IncreaseDataGenerator) DoGenerate(field *schema.Field, rowNum int32) ([]string, error) {
 	mockParams := field.MockParams.(float64)
 	result := make([]string, 0, rowNum)
 	if mockParams < 0 {

@@ -15,7 +15,7 @@ import (
  */
 
 type DataGenerator interface {
-	DoGenerate(field schema.Field, rowNum int32) ([]string, error)
+	DoGenerate(field *schema.Field, rowNum int32) ([]string, error)
 }
 
 var mockTypeDataGeneratorMap map[MockTypeEnum]DataGenerator

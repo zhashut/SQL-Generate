@@ -18,6 +18,13 @@ import (
  */
 
 type TableSchemaBuilder struct {
+	SQLDialect SQLDialect
+}
+
+func NewTableSchemaBuilder() *TableSchemaBuilder {
+	return &TableSchemaBuilder{
+		SQLDialect: &Dialect{},
+	}
 }
 
 // BuildFromAuto 智能导入
