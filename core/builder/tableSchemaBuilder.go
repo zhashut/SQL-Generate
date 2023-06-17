@@ -54,9 +54,9 @@ func (b *TableSchemaBuilder) BuildFromAuto(content string) (*schema.TableSchema,
 	tableSchema := &schema.TableSchema{}
 	tableSchema.TableName = "my_table"
 	tableSchema.TableComment = "自动生成的表"
-	fieldList := make([]schema.Field, 0)
+	fieldList := make([]*schema.Field, 0)
 	for _, word := range words {
-		var field schema.Field
+		var field *schema.Field
 		var infoList []*models.FieldInfo
 		infoList = append(infoList, nameFieldInfoMap[word]...)
 		infoList = append(infoList, fieldNameFieldInfoMap[word]...)
@@ -76,8 +76,8 @@ func (b *TableSchemaBuilder) BuildFromAuto(content string) (*schema.TableSchema,
 }
 
 // 获取默认字段
-func getDefaultField(word string) schema.Field {
-	field := schema.Field{
+func getDefaultField(word string) *schema.Field {
+	field := &schema.Field{
 		FieldName:     word,
 		FieldType:     "text",
 		DefaultValue:  "",
