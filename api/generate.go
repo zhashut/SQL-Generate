@@ -50,3 +50,22 @@ func GetSchemaByAuto(c *gin.Context) {
 	}
 	ResponseSuccess(c, auto)
 }
+
+// GetSchemaByExcel Excel导入
+func GetSchemaByExcel(c *gin.Context) {
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	file, err := fileHeader.Open()
+	if err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	defer file.Close()
+
+	tableSchema, err := tableSchemaBuilder.BuildFromExcel(file)
+
+	ResponseSuccess(c, tableSchema)
+}

@@ -3,10 +3,16 @@ package builder
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/xuri/excelize/v2"
+	"math"
+	"mime/multipart"
 	"regexp"
+	. "sql_generate/consts"
 	"sql_generate/core/schema"
 	"sql_generate/global"
 	"sql_generate/models"
+	"sql_generate/utils"
+	"strconv"
 )
 
 /**
@@ -16,6 +22,10 @@ import (
  * Time: 18:45
  * Description: 表概要生成器
  */
+
+const (
+	FLASE_FIELD = "false"
+)
 
 type TableSchemaBuilder struct {
 	SQLDialect SQLDialect
@@ -73,6 +83,78 @@ func (b *TableSchemaBuilder) BuildFromAuto(content string) (*schema.TableSchema,
 	}
 	tableSchema.FieldList = fieldList
 	return tableSchema, nil
+}
+
+// BuildFromExcel Excel 导入
+func (b *TableSchemaBuilder) BuildFromExcel(file multipart.File) (*schema.TableSchema, error) {
+	xlsx, err := excelize.OpenReader(file)
+	if err != nil {
+		return nil, fmt.Errorf("表格解析错误: %v", err)
+	}
+	rows, err := xlsx.Rows("Sheet1")
+	if err != nil {
+		return nil, fmt.Errorf("表格无数据: %v", err)
+	}
+	defer rows.Close()
+
+	var fieldList []*schema.Field
+	index := 0
+	for rows.Next() {
+		row, _ := rows.Columns()
+		if index == 0 {
+			for _, val := range row {
+				field := &schema.Field{
+					FieldName: val,
+					Comment:   val,
+					FieldType: FieldTypeEnumToString[TEXT],
+				}
+				fieldList = append(fieldList, field)
+			}
+		} else if index == 1 {
+			for i, val := range row {
+				fieldType := getFieldTypeByValue(val).(string)
+				fieldList[i].FieldType = fieldType
+			}
+		} else {
+			break
+		}
+		index++
+	}
+	if index == 0 {
+		return nil, fmt.Errorf("表格无数据")
+	}
+	tableSchema := &schema.TableSchema{
+		FieldList: fieldList,
+	}
+	return tableSchema, nil
+}
+
+// GetFieldTypeByValue 判断字段类型
+func getFieldTypeByValue(value string) interface{} {
+	if len(value) == 0 {
+		return FieldTypeEnumToString[TEXT]
+	}
+	// 布尔
+	if FLASE_FIELD == value {
+		return FieldTypeEnumToString[TINYINT]
+	}
+	// 整数
+	if utils.IsNumeric(value) {
+		number, _ := strconv.ParseInt(value, 10, 64)
+		if number > math.MaxInt {
+			return FieldTypeEnumToString[BIGINT]
+		}
+		return FieldTypeEnumToString[INT]
+	}
+	// 小数
+	if utils.IsDouble(value) {
+		return FieldTypeEnumToString[DOUBLE]
+	}
+	// 日期
+	if utils.IsDate(value) {
+		return FieldTypeEnumToString[DATETIME]
+	}
+	return FieldTypeEnumToString[TEXT]
 }
 
 // 获取默认字段
