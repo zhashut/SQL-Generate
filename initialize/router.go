@@ -26,5 +26,6 @@ func Router() *gin.Engine {
 	routers.InitTable(apiGroup)
 	routers.InitDict(apiGroup)
 	routers.InitField(apiGroup)
+	routers.InitReport(apiGroup)
 	return r
 }
