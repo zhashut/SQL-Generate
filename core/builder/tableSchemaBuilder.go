@@ -85,7 +85,7 @@ func (b *TableSchemaBuilder) BuildFromAuto(content string) (*schema.TableSchema,
 	return tableSchema, nil
 }
 
-// BuildFromExcel Excel 导入
+// BuildFromExcel 导入 Excel TODO Sheet1 是硬编码，改为入参，
 func (b *TableSchemaBuilder) BuildFromExcel(file multipart.File) (*schema.TableSchema, error) {
 	xlsx, err := excelize.OpenReader(file)
 	if err != nil {
@@ -106,7 +106,7 @@ func (b *TableSchemaBuilder) BuildFromExcel(file multipart.File) (*schema.TableS
 				field := &schema.Field{
 					FieldName: val,
 					Comment:   val,
-					FieldType: FieldTypeEnumToString[TEXT],
+					FieldType: FieldTypeEnumToString[TEXT][SQLIndex],
 				}
 				fieldList = append(fieldList, field)
 			}

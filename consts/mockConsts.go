@@ -49,90 +49,66 @@ func GetMockTypeEnumByValue(value string) MockTypeEnum {
 	return NONE
 }
 
-type FieldTypeEnum string
-
-const (
-	TINYINT    FieldTypeEnum = "tinyint"
-	SMALLINT   FieldTypeEnum = "smallint"
-	MEDIUMINT  FieldTypeEnum = "mediumint"
-	INT        FieldTypeEnum = "int"
-	BIGINT     FieldTypeEnum = "bigint"
-	FLOAT      FieldTypeEnum = "float"
-	DOUBLE     FieldTypeEnum = "double"
-	DECIMAL    FieldTypeEnum = "decimal"
-	DATE       FieldTypeEnum = "date"
-	TIME       FieldTypeEnum = "time"
-	YEAR       FieldTypeEnum = "year"
-	DATETIME   FieldTypeEnum = "datetime"
-	TIMESTAMP  FieldTypeEnum = "timestamp"
-	CHAR       FieldTypeEnum = "char"
-	VARCHAR    FieldTypeEnum = "varchar"
-	TINYTEXT   FieldTypeEnum = "tinytext"
-	TEXT       FieldTypeEnum = "text"
-	MEDIUMTEXT FieldTypeEnum = "mediumtext"
-	LONGTEXT   FieldTypeEnum = "longtext"
-	TINYBLOB   FieldTypeEnum = "tinyblob"
-	BLOB       FieldTypeEnum = "blob"
-	MEDIUMBLOB FieldTypeEnum = "mediumblob"
-	LONGBLOB   FieldTypeEnum = "longblob"
-	BINARY     FieldTypeEnum = "binary"
-	VARBINARY  FieldTypeEnum = "varbinary"
-)
-
-var FieldTypeEnumToString = map[FieldTypeEnum]string{
-	TINYINT:    "tinyint",
-	SMALLINT:   "smallint",
-	MEDIUMINT:  "mediumint",
-	INT:        "int",
-	BIGINT:     "bigint",
-	FLOAT:      "float",
-	DOUBLE:     "double",
-	DECIMAL:    "decimal",
-	DATE:       "date",
-	TIME:       "time",
-	YEAR:       "year",
-	DATETIME:   "datetime",
-	TIMESTAMP:  "timestamp",
-	CHAR:       "char",
-	VARCHAR:    "varchar",
-	TINYTEXT:   "tinytext",
-	TEXT:       "text",
-	MEDIUMTEXT: "mediumtext",
-	LONGTEXT:   "longtext",
-	TINYBLOB:   "tinyblob",
-	BLOB:       "blob",
-	MEDIUMBLOB: "mediumblob",
-	LONGBLOB:   "longblob",
-	BINARY:     "binary",
-	VARBINARY:  "varbinary",
+type FieldTypeEnum struct {
+	Value    string
+	JavaType string
+	GoType   string
 }
 
-var FieldTypeStringToEnum = map[string]FieldTypeEnum{
-	"tinyint":    TINYINT,
-	"smallint":   SMALLINT,
-	"mediumint":  MEDIUMINT,
-	"int":        INT,
-	"bigint":     BIGINT,
-	"float":      FLOAT,
-	"double":     DOUBLE,
-	"decimal":    DECIMAL,
-	"date":       DATE,
-	"time":       TIME,
-	"year":       YEAR,
-	"datetime":   DATETIME,
-	"timestamp":  TIMESTAMP,
-	"char":       CHAR,
-	"varchar":    VARCHAR,
-	"tinytext":   TINYTEXT,
-	"text":       TEXT,
-	"mediumtext": MEDIUMTEXT,
-	"longtext":   LONGTEXT,
-	"tinyblob":   TINYBLOB,
-	"blob":       BLOB,
-	"mediumblob": MEDIUMBLOB,
-	"longblob":   LONGBLOB,
-	"binary":     BINARY,
-	"varbinary":  VARBINARY,
+var (
+	TINYINT    = FieldTypeEnum{"tinyint", "Integer", "int"}
+	SMALLINT   = FieldTypeEnum{"smallint", "Integer", "int"}
+	MEDIUMINT  = FieldTypeEnum{"mediumint", "Integer", "int"}
+	INT        = FieldTypeEnum{"int", "Integer", "int"}
+	BIGINT     = FieldTypeEnum{"bigint", "Long", "int64"}
+	FLOAT      = FieldTypeEnum{"float", "Double", "float64 "}
+	DOUBLE     = FieldTypeEnum{"double", "Double", "float64 "}
+	DECIMAL    = FieldTypeEnum{"decimal", "BigDecimal", "float64"}
+	DATE       = FieldTypeEnum{"date", "Date", "time.Time"}
+	TIME       = FieldTypeEnum{"time", "Time", "time.Time"}
+	YEAR       = FieldTypeEnum{"year", "Integer", "int"}
+	DATETIME   = FieldTypeEnum{"datetime", "Date", "time.Time"}
+	TIMESTAMP  = FieldTypeEnum{"timestamp", "Long", "int64"}
+	CHAR       = FieldTypeEnum{"char", "String", "string"}
+	VARCHAR    = FieldTypeEnum{"varchar", "String", "string"}
+	TINYTEXT   = FieldTypeEnum{"tinytext", "String", "string"}
+	TEXT       = FieldTypeEnum{"text", "String", "string"}
+	MEDIUMTEXT = FieldTypeEnum{"mediumtext", "String", "string"}
+	LONGTEXT   = FieldTypeEnum{"longtext", "String", "string"}
+	TINYBLOB   = FieldTypeEnum{"tinyblob", "byte[]", "[]byte"}
+	BLOB       = FieldTypeEnum{"blob", "byte[]", "[]byte"}
+	MEDIUMBLOB = FieldTypeEnum{"mediumblob", "byte[]", "[]byte"}
+	LONGBLOB   = FieldTypeEnum{"longblob", "byte[]", "[]byte"}
+	BINARY     = FieldTypeEnum{"binary", "byte[]", "[]byte"}
+	VARBINARY  = FieldTypeEnum{"varbinary", "byte[]", "[]byte"}
+)
+
+var FieldTypeEnumToString = map[FieldTypeEnum][]string{
+	TINYINT:    {"tinyint", "Integer", "int"},
+	SMALLINT:   {"smallint", "Integer", "int"},
+	MEDIUMINT:  {"mediumint", "Integer", "int"},
+	INT:        {"int", "Integer", "int"},
+	BIGINT:     {"bigint", "Long", "int64"},
+	FLOAT:      {"float", "Double", "float64 "},
+	DOUBLE:     {"double", "Double", "float64 "},
+	DECIMAL:    {"decimal", "BigDecimal", "float64"},
+	DATE:       {"date", "Date", "time.Time"},
+	TIME:       {"time", "Time", "time.Time"},
+	YEAR:       {"year", "Integer", "int"},
+	DATETIME:   {"datetime", "Date", "time.Time"},
+	TIMESTAMP:  {"timestamp", "Long", "int64"},
+	CHAR:       {"char", "String", "string"},
+	VARCHAR:    {"varchar", "String", "string"},
+	TINYTEXT:   {"tinytext", "String", "string"},
+	TEXT:       {"text", "String", "string"},
+	MEDIUMTEXT: {"mediumtext", "String", "string"},
+	LONGTEXT:   {"longtext", "String", "string"},
+	TINYBLOB:   {"tinyblob", "byte[]", "[]byte"},
+	BLOB:       {"blob", "byte[]", "[]byte"},
+	MEDIUMBLOB: {"mediumblob", "byte[]", "[]byte"},
+	LONGBLOB:   {"longblob", "byte[]", "[]byte"},
+	BINARY:     {"binary", "byte[]", "[]byte"},
+	VARBINARY:  {"varbinary", "byte[]", "[]byte"},
 }
 
 var FieldTypeEnumStruct = map[FieldTypeEnum]struct{}{
@@ -213,7 +189,7 @@ func GetMockParamsRandomTypeByValue(value string) MockParamsRandomTypeEnum {
 // GetFieldTypeEnumByValue 根据 value 获取枚举，默认返回 TEXT
 func GetFieldTypeEnumByValue(value string) FieldTypeEnum {
 	for mockNum, mockString := range FieldTypeEnumToString {
-		if value == mockString {
+		if value == mockString[SQLIndex] {
 			return mockNum
 		}
 	}

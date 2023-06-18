@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	. "sql_generate/consts"
 	"sql_generate/core/builder"
 	"sql_generate/core/schema"
 	"sql_generate/models"
@@ -16,16 +17,20 @@ import (
  */
 
 type GeneratorFace struct {
-	SQLBuilder  *builder.SQLBuilder
-	DataBuilder *builder.DataBuilder
-	JsonBuilder *builder.JsonBuilder
+	SQLBuilder        *builder.SQLBuilder
+	DataBuilder       *builder.DataBuilder
+	JsonBuilder       *builder.JsonBuilder
+	GoCodeGenerator   *builder.CodeGenerator
+	JavaCodeGenerator *builder.CodeGenerator
 }
 
 func NewGeneratorFace() *GeneratorFace {
 	return &GeneratorFace{
-		SQLBuilder:  builder.NewSQLBuilder(),
-		DataBuilder: builder.NewDataBuilder(),
-		JsonBuilder: builder.NewJsonBuilder(),
+		SQLBuilder:        builder.NewSQLBuilder(),
+		DataBuilder:       builder.NewDataBuilder(),
+		JsonBuilder:       builder.NewJsonBuilder(),
+		GoCodeGenerator:   builder.NewCodeGenerator(GoField, GoTemplate, GoIndex).CodeGenerator,
+		JavaCodeGenerator: builder.NewCodeGenerator(JavaField, JavaTemplate, JavaIndex).CodeGenerator,
 	}
 }
 
@@ -56,13 +61,26 @@ func (g *GeneratorFace) GenerateAll(tableSchema *schema.TableSchema) (*models.Ge
 	if err != nil {
 		return nil, fmt.Errorf("dataJson 生成失败")
 	}
+	// 生成 go 实体代码
+	goStructCode, err := g.GoCodeGenerator.BuilderCode(tableSchema)
+	if err != nil {
+		return nil, fmt.Errorf("goStructCode 生成失败")
+	}
+	// 生成 java 实体代码
+	javaEntityCode, err := g.JavaCodeGenerator.BuilderCode(tableSchema)
+	if err != nil {
+		return nil, fmt.Errorf("javaEntity 生成失败")
+	}
+
 	// 封装返回
 	return &models.Generate{
-		TableSchema: tableSchema,
-		CreateSQL:   createSQL,
-		DataList:    dataList,
-		InsertSQL:   insertSQL,
-		DataJson:    dataJson,
+		TableSchema:    tableSchema,
+		CreateSQL:      createSQL,
+		DataList:       dataList,
+		InsertSQL:      insertSQL,
+		DataJson:       dataJson,
+		GoStructCode:   goStructCode,
+		JavaEntityCode: javaEntityCode,
 	}, nil
 }
 
