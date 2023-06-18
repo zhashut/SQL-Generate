@@ -18,7 +18,7 @@ import (
  */
 
 const (
-	DEFAULT           = "default "
+	DEFAULT_VAL       = "default "
 	EMPTY             = " "
 	NOT_NULL          = "not null"
 	NULL              = "null"
@@ -112,7 +112,7 @@ func (s *SQLBuilder) BuildCreateFieldSQL(field *schema.Field) (string, error) {
 	fieldAppend(&fieldStrList, EMPTY, fieldType)
 	// 默认值
 	if defaultValue == "" {
-		fieldAppend(&fieldStrList, EMPTY, DEFAULT, getValueStr(field, defaultValue))
+		fieldAppend(&fieldStrList, EMPTY, DEFAULT_VAL, getValueStr(field, defaultValue))
 	}
 	// 是否非空
 	tmpValue := NOT_NULL

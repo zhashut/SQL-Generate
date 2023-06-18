@@ -121,7 +121,7 @@ func (dao *FieldDao) GetFieldListPage(ctx context.Context, req *models.FieldInfo
 	return fieldList, nil
 }
 
-// dao.GetFieldQueryWrapper 获取查询包装类
+// GetFieldQueryWrapper 获取查询包装类
 func (dao *FieldDao) GetFieldQueryWrapper(db *gorm.DB, fieldQueryRequest *models.FieldInfoQueryRequest) (*gorm.DB, error) {
 	if fieldQueryRequest == nil {
 		return nil, errors.New("请求参数为空")
