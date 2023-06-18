@@ -1,12 +1,17 @@
 package api
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/xuri/excelize/v2"
 	"go.uber.org/zap"
+	"net/url"
 	"sql_generate/core"
 	"sql_generate/core/builder"
 	"sql_generate/core/schema"
 	"sql_generate/models"
+	"strings"
 )
 
 /**
@@ -68,4 +73,55 @@ func GetSchemaByExcel(c *gin.Context) {
 	tableSchema, err := tableSchemaBuilder.BuildFromExcel(file)
 
 	ResponseSuccess(c, tableSchema)
+}
+
+// DownloadDataExcel 下载模拟数据 Excel
+func DownloadDataExcel(c *gin.Context) {
+	var generateVO models.Generate
+	err := json.NewDecoder(c.Request.Body).Decode(&generateVO)
+	if err != nil {
+		ResponseErrorWithMsg(c, ErrorPERATION, "Invalid request body")
+		return
+	}
+
+	tableSchema := generateVO.TableSchema
+	tableName := tableSchema.TableName
+
+	// Create a new Excel workbook
+	f := excelize.NewFile()
+
+	// Set table headers
+	for index, field := range tableSchema.FieldList {
+		err = f.SetCellValue("Sheet1", fmt.Sprintf("%s1", columnIndexToExcelColumn(index)), field.FieldName)
+		if err != nil {
+			ResponseErrorWithMsg(c, ErrorPERATION, "Error setting header value")
+			return
+		}
+	}
+
+	// Set data rows
+	for rowIndex, data := range generateVO.DataList {
+		for colIndex, field := range tableSchema.FieldList {
+			err = f.SetCellValue("Sheet1", fmt.Sprintf("%s%d", columnIndexToExcelColumn(colIndex), rowIndex+2), data[field.FieldName])
+			if err != nil {
+				ResponseErrorWithMsg(c, ErrorPERATION, "Error setting cell value")
+				return
+			}
+		}
+	}
+
+	contentType := "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	charset := "utf-8"
+
+	fileName := tableName + "表数据"
+	disposition := "attachment;filename*=utf-8''" + url.QueryEscape(strings.ReplaceAll(fileName, " ", "%20")) + ".xlsx"
+
+	c.Header("Content-Disposition", disposition)
+	c.Header("Content-Type", contentType+";charset="+charset)
+	c.Header("Access-Control-Expose-Headers", "Content-Disposition")
+
+	err = f.Write(c.Writer)
+	if err != nil {
+		ResponseErrorWithMsg(c, ErrorInvalidParams, "Error writing Excel file")
+	}
 }
