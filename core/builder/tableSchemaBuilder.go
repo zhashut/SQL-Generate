@@ -132,29 +132,29 @@ func (b *TableSchemaBuilder) BuildFromExcel(file multipart.File) (*schema.TableS
 // GetFieldTypeByValue 判断字段类型
 func getFieldTypeByValue(value string) interface{} {
 	if len(value) == 0 {
-		return FieldTypeEnumToString[TEXT]
+		return FieldTypeEnumToString[TEXT][SQLIndex]
 	}
 	// 布尔
 	if FLASE_FIELD == value {
-		return FieldTypeEnumToString[TINYINT]
+		return FieldTypeEnumToString[TINYINT][SQLIndex]
 	}
 	// 整数
 	if utils.IsNumeric(value) {
 		number, _ := strconv.ParseInt(value, 10, 64)
 		if number > math.MaxInt {
-			return FieldTypeEnumToString[BIGINT]
+			return FieldTypeEnumToString[BIGINT][SQLIndex]
 		}
-		return FieldTypeEnumToString[INT]
-	}
-	// 小数
-	if utils.IsDouble(value) {
-		return FieldTypeEnumToString[DOUBLE]
+		return FieldTypeEnumToString[INT][SQLIndex]
 	}
 	// 日期
 	if utils.IsDate(value) {
-		return FieldTypeEnumToString[DATETIME]
+		return FieldTypeEnumToString[DATETIME][SQLIndex]
 	}
-	return FieldTypeEnumToString[TEXT]
+	// 小数
+	if utils.IsDouble(value) {
+		return FieldTypeEnumToString[DOUBLE][SQLIndex]
+	}
+	return FieldTypeEnumToString[TEXT][SQLIndex]
 }
 
 // 获取默认字段
