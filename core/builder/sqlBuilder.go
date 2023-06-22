@@ -40,10 +40,10 @@ type SQLDialect interface {
 	ParseTableName(tableName string) string // 解析表名
 }
 
-// NewSQLBuilder TODO 这里可以设置成传参的方式来指定不同的实现，灵活变动
+// NewSQLBuilder 这里可以指定不同的实现，灵活变动
 func NewSQLBuilder() *SQLBuilder {
 	return &SQLBuilder{
-		SQLDialect: &Dialect{},
+		SQLDialect: NewMySQLDialect(),
 	}
 }
 
