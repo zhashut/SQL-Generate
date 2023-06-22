@@ -12,7 +12,6 @@ import (
 	"sql_generate/global"
 	"sql_generate/models"
 	"sql_generate/respository/db"
-	"strconv"
 	"strings"
 )
 
@@ -208,6 +207,7 @@ func (s *DictService) GenerateCreateSQL(ctx context.Context, id int64) (*models.
 	idField.FieldType = "bigint"
 	idField.NotNull = true
 	idField.Comment = "id"
+	idField.MockParams = ""
 	idField.PrimaryKey = true
 	idField.AutoIncrement = true
 	var dataField schema.Field
@@ -215,7 +215,7 @@ func (s *DictService) GenerateCreateSQL(ctx context.Context, id int64) (*models.
 	dataField.FieldType = "text"
 	dataField.Comment = "数据"
 	dataField.MockType = MockTypeEnumToString[DICT]
-	dataField.MockParams = strconv.Itoa(int(id))
+	dataField.MockParams = float64(id)
 	fieldList = append(fieldList, &idField, &dataField)
 	tableSchema.FieldList = fieldList
 	all, err := s.GenerateResolver.GenerateAll(tableSchema)
