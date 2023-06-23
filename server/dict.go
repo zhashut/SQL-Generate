@@ -5,13 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/copier"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"regexp"
 	. "sql_generate/consts"
 	"sql_generate/core"
 	"sql_generate/core/schema"
 	"sql_generate/global"
 	"sql_generate/models"
+	"sql_generate/respository/cache"
 	"sql_generate/respository/db"
+	"strconv"
 	"strings"
 )
 
@@ -25,6 +29,7 @@ import (
 
 type DictService struct {
 	DB               *db.DictDao
+	Cache            *cache.Cache
 	UserResolver     UserResolver
 	GenerateResolver GenerateResolver
 }
@@ -54,6 +59,10 @@ func (s *DictService) AddDict(ctx context.Context, dictAddReq *models.DictAddReq
 	if !result || err != nil {
 		return 0, fmt.Errorf("cannot add dict: %v", err)
 	}
+	if err := s.Cache.DeleteKV(ctx, CACHE_DICT_KEY+"*"); err != nil {
+		zap.S().Errorf("failed to delete: %s", CACHE_DICT_KEY)
+		return dict.ID, nil
+	}
 	return dict.ID, nil
 }
 
@@ -62,9 +71,25 @@ func (s *DictService) GetDictByID(ctx context.Context, id int64) (*models.Dict, 
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid id: %v", id)
 	}
-	dict, err := s.DB.GetDictByID(ctx, id)
+	var dict *models.Dict
+	cacheKey := CACHE_DICT_KEY + strconv.FormatInt(id, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get dict: %v", err)
+		if err == redis.Nil {
+			dict, err = s.DB.GetDictByID(ctx, id)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get dict: %v", err)
+			}
+			marshal, _ := json.Marshal(&dict)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return dict, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &dict); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal DictListPage: %v", err)
 	}
 	return dict, nil
 }
@@ -93,6 +118,10 @@ func (s *DictService) DeleteDict(ctx context.Context, req *models.OnlyIDRequest)
 	if err != nil {
 		return false, fmt.Errorf("cannot delete dict: %v", err)
 	}
+	if err := s.Cache.DeleteKV(ctx, CACHE_DICT_KEY+"*"); err != nil {
+		zap.S().Errorf("failed to delete: %s", CACHE_DICT_KEY)
+		return b, nil
+	}
 	return b, nil
 }
 
@@ -106,8 +135,24 @@ func (s *DictService) GetMyAddDictListPage(ctx context.Context, req *models.Dict
 	if err != nil {
 		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
-	req.UserID = user.ID
-	dicts, err := s.DB.GetMyAddDictListPage(ctx, req)
+	var dicts []*models.Dict
+	cacheKey := CACHE_DICT_KEY + ADD_LIST_PAGE + strconv.FormatInt(user.ID, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
+	if err != nil {
+		if err == redis.Nil {
+			req.UserID = user.ID
+			dicts, err = s.DB.GetMyAddDictListPage(ctx, req)
+			marshal, _ := json.Marshal(&dicts)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return dicts, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &dicts); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal DictListPage: %v", err)
+	}
 	return dicts, nil
 }
 
@@ -121,9 +166,25 @@ func (s *DictService) GetMyDictListPage(ctx context.Context, req *models.DictQue
 	if err != nil {
 		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
-	req.UserID = user.ID
-	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	dicts, err := s.DB.GetMyDictListPage(ctx, req)
+	var dicts []*models.Dict
+	cacheKey := CACHE_DICT_KEY + MY_LIST_PAGE + strconv.FormatInt(user.ID, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
+	if err != nil {
+		if err == redis.Nil {
+			req.UserID = user.ID
+			req.ReviewStatus = ReviewStatusEnumToInt[PASS]
+			dicts, err = s.DB.GetMyDictListPage(ctx, req)
+			marshal, _ := json.Marshal(&dicts)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return dicts, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &dicts); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal DictListPage: %v", err)
+	}
 	return dicts, nil
 }
 
@@ -132,28 +193,44 @@ func (s *DictService) GetMyDictList(ctx context.Context, req *models.DictQueryRe
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	dictList := make([]*models.Dict, 0)
-	// 先查询审核通过的
-	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	passDictList, err := s.DB.GetMyDictList(ctx, req, false)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get pass dict list: %v", err)
-	}
-	dictList = append(dictList, passDictList...)
-	//查询本人的词条
 	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
 	if err != nil {
 		return nil, err
 	}
-	req.ReviewStatus = ReviewStatusEnumToInt[REVIEWING]
-	req.UserID = user.ID
-	myDictList, err := s.DB.GetMyDictList(ctx, req, true)
+	dictList := make([]*models.Dict, 0)
+	var dicts []*models.Dict
+	cacheKey := CACHE_DICT_KEY + MY_LIST + strconv.FormatInt(user.ID, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get my dict list: %v", err)
+		if err == redis.Nil {
+			// 先查询审核通过的
+			req.ReviewStatus = ReviewStatusEnumToInt[PASS]
+			passDictList, err := s.DB.GetMyDictList(ctx, req, false)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get pass dict list: %v", err)
+			}
+			dictList = append(dictList, passDictList...)
+			// 查询当前登录用户的词条
+			req.ReviewStatus = ReviewStatusEnumToInt[REVIEWING]
+			req.UserID = user.ID
+			myDictList, err := s.DB.GetMyDictList(ctx, req, true)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get my dict list: %v", err)
+			}
+			dictList = append(dictList, myDictList...)
+			// 根据id去重
+			dicts = dictDeduplicate(dictList)
+			marshal, _ := json.Marshal(&dicts)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return dicts, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
 	}
-	dictList = append(dictList, myDictList...)
-	// 根据id去重
-	dicts := dictDeduplicate(dictList)
+	if err := json.Unmarshal([]byte(value), &dicts); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal DictListPage: %v", err)
+	}
 	return dicts, nil
 }
 
@@ -180,9 +257,26 @@ func (s *DictService) GetDictListPage(ctx context.Context, req *models.DictQuery
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	dicts, err := s.DB.GetDictListPage(ctx, req)
+	var dicts []*models.Dict
+	cacheKey := CACHE_DICT_KEY + LIST_PAGE
+	// 先查缓存
+	dictsJson, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get DictListPage: %v", err)
+		if err == redis.Nil {
+			dicts, err = s.DB.GetDictListPage(ctx, req)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get DictListPage: %v", err)
+			}
+			marshal, _ := json.Marshal(&dicts)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return dicts, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(dictsJson), &dicts); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal DictListPage: %v", err)
 	}
 	return dicts, nil
 }

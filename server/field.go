@@ -5,13 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/copier"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	. "sql_generate/consts"
 	"sql_generate/core"
 	"sql_generate/core/builder"
 	"sql_generate/core/schema"
 	"sql_generate/global"
 	"sql_generate/models"
+	"sql_generate/respository/cache"
 	"sql_generate/respository/db"
+	"strconv"
 )
 
 /**
@@ -24,6 +28,7 @@ import (
 
 type FieldService struct {
 	DB               *db.FieldDao
+	Cache            *cache.Cache
 	UserResolver     UserResolver
 	GenerateResolver GenerateResolver
 	BuilderResolver  BuilderResolver
@@ -58,6 +63,10 @@ func (s *FieldService) AddField(ctx context.Context, fieldAddReq *models.FieldIn
 	if !result || err != nil {
 		return 0, fmt.Errorf("cannot add field: %v", err)
 	}
+	if err := s.Cache.DeleteKV(ctx, CACHE_FIELD_KEY+"*"); err != nil {
+		zap.S().Errorf("failed to delete: %s", CACHE_FIELD_KEY)
+		return field.ID, nil
+	}
 	return field.ID, nil
 }
 
@@ -66,9 +75,25 @@ func (s *FieldService) GetFieldByID(ctx context.Context, id int64) (*models.Fiel
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid id: %v", id)
 	}
-	field, err := s.DB.GetFieldByID(ctx, id)
+	var field *models.FieldInfo
+	cacheKey := CACHE_DICT_KEY + strconv.FormatInt(id, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get field: %v", err)
+		if err == redis.Nil {
+			field, err = s.DB.GetFieldByID(ctx, id)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get field: %v", err)
+			}
+			marshal, _ := json.Marshal(&field)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return field, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &field); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal response: %v", err)
 	}
 	return field, nil
 }
@@ -97,6 +122,10 @@ func (s *FieldService) DeleteField(ctx context.Context, req *models.OnlyIDReques
 	if err != nil {
 		return false, fmt.Errorf("cannot delete field: %v", err)
 	}
+	if err := s.Cache.DeleteKV(ctx, CACHE_FIELD_KEY+"*"); err != nil {
+		zap.S().Errorf("failed to delete: %s", CACHE_FIELD_KEY)
+		return b, nil
+	}
 	return b, nil
 }
 
@@ -110,8 +139,27 @@ func (s *FieldService) GetMyAddFieldListPage(ctx context.Context, req *models.Fi
 	if err != nil {
 		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
-	req.UserID = user.ID
-	fields, err := s.DB.GetMyAddFieldListPage(ctx, req)
+	var fields []*models.FieldInfo
+	cacheKey := CACHE_FIELD_KEY + ADD_LIST_PAGE + strconv.FormatInt(user.ID, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
+	if err != nil {
+		if err == redis.Nil {
+			req.UserID = user.ID
+			fields, err = s.DB.GetMyAddFieldListPage(ctx, req)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get MyAddFieldListPage: %v", err)
+			}
+			marshal, _ := json.Marshal(&fields)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return fields, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &fields); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal MyAddFieldListPage: %v", err)
+	}
 	return fields, nil
 }
 
@@ -125,9 +173,28 @@ func (s *FieldService) GetMyFieldListPage(ctx context.Context, req *models.Field
 	if err != nil {
 		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
-	req.UserID = user.ID
-	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	fields, err := s.DB.GetMyFieldListPage(ctx, req)
+	var fields []*models.FieldInfo
+	cacheKey := CACHE_FIELD_KEY + MY_LIST_PAGE + strconv.FormatInt(user.ID, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
+	if err != nil {
+		if err == redis.Nil {
+			req.UserID = user.ID
+			req.ReviewStatus = ReviewStatusEnumToInt[PASS]
+			fields, err = s.DB.GetMyFieldListPage(ctx, req)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get MyFieldListPage: %v", err)
+			}
+			marshal, _ := json.Marshal(&fields)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return fields, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &fields); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal MyFieldListPage: %v", err)
+	}
 	return fields, nil
 }
 
@@ -136,28 +203,44 @@ func (s *FieldService) GetMyFieldList(ctx context.Context, req *models.FieldInfo
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	fieldList := make([]*models.FieldInfo, 0)
-	// 先查询审核通过的
-	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	passFieldList, err := s.DB.GetMyFieldList(ctx, req, false)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get pass field list: %v", err)
-	}
-	fieldList = append(fieldList, passFieldList...)
-	//查询本人的词条
 	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
 	if err != nil {
 		return nil, err
 	}
-	req.ReviewStatus = ReviewStatusEnumToInt[REVIEWING]
-	req.UserID = user.ID
-	myFieldList, err := s.DB.GetMyFieldList(ctx, req, true)
+	var fields []*models.FieldInfo
+	cacheKey := CACHE_FIELD_KEY + MY_LIST + strconv.FormatInt(user.ID, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get my field list: %v", err)
+		if err == redis.Nil {
+			fieldList := make([]*models.FieldInfo, 0)
+			// 先查询审核通过的
+			req.ReviewStatus = ReviewStatusEnumToInt[PASS]
+			passFieldList, err := s.DB.GetMyFieldList(ctx, req, false)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get pass field list: %v", err)
+			}
+			fieldList = append(fieldList, passFieldList...)
+			// 查询当前登录用户的词条
+			req.ReviewStatus = ReviewStatusEnumToInt[REVIEWING]
+			req.UserID = user.ID
+			myFieldList, err := s.DB.GetMyFieldList(ctx, req, true)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get my field list: %v", err)
+			}
+			fieldList = append(fieldList, myFieldList...)
+			// 根据id去重
+			fields = fieldDeduplicate(fieldList)
+			marshal, _ := json.Marshal(&fields)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return fields, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
 	}
-	fieldList = append(fieldList, myFieldList...)
-	// 根据id去重
-	fields := fieldDeduplicate(fieldList)
+	if err := json.Unmarshal([]byte(value), &fields); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal MyFieldList: %v", err)
+	}
 	return fields, nil
 }
 
@@ -184,9 +267,25 @@ func (s *FieldService) GetFieldListPage(ctx context.Context, req *models.FieldIn
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	fields, err := s.DB.GetFieldListPage(ctx, req)
+	var fields []*models.FieldInfo
+	cacheKey := CACHE_FIELD_KEY + LIST_PAGE
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get FieldListPage: %v", err)
+		if err == redis.Nil {
+			fields, err = s.DB.GetFieldListPage(ctx, req)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get FieldListPage: %v", err)
+			}
+			marshal, _ := json.Marshal(&fields)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return fields, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &fields); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal FieldListPage: %v", err)
 	}
 	return fields, nil
 }

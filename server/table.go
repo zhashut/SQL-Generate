@@ -5,13 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/copier"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	. "sql_generate/consts"
 	"sql_generate/core"
 	"sql_generate/core/builder"
 	"sql_generate/core/schema"
 	"sql_generate/global"
 	"sql_generate/models"
+	"sql_generate/respository/cache"
 	"sql_generate/respository/db"
+	"strconv"
 )
 
 /**
@@ -24,6 +28,7 @@ import (
 
 type TableService struct {
 	DB               *db.TableDao
+	Cache            *cache.Cache
 	UserResolver     UserResolver
 	GenerateResolver GenerateResolver
 	BuilderResolver  BuilderResolver
@@ -55,6 +60,10 @@ func (s *TableService) AddTableInfo(ctx context.Context, tableAddReq *models.Tab
 	if !result || err != nil {
 		return 0, fmt.Errorf("cannot add table: %v", err)
 	}
+	if err := s.Cache.DeleteKV(ctx, CACHE_TABLE_KEY+"*"); err != nil {
+		zap.S().Errorf("failed to delete: %s", CACHE_TABLE_KEY)
+		return table.ID, nil
+	}
 	return table.ID, nil
 }
 
@@ -63,9 +72,25 @@ func (s *TableService) GetTableInfoByID(ctx context.Context, id int64) (*models.
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid id: %v", id)
 	}
-	table, err := s.DB.GetTableInfoByID(ctx, id)
+	var table *models.TableInfo
+	cacheKey := CACHE_TABLE_KEY + strconv.FormatInt(id, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get table: %v", err)
+		if err == redis.Nil {
+			table, err = s.DB.GetTableInfoByID(ctx, id)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get table: %v", err)
+			}
+			marshal, _ := json.Marshal(&table)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return table, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &table); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal response: %v", err)
 	}
 	return table, nil
 }
@@ -94,6 +119,10 @@ func (s *TableService) DeleteTableInfo(ctx context.Context, req *models.OnlyIDRe
 	if err != nil {
 		return false, fmt.Errorf("cannot delete table: %v", err)
 	}
+	if err := s.Cache.DeleteKV(ctx, CACHE_TABLE_KEY+"*"); err != nil {
+		zap.S().Errorf("failed to delete: %s", CACHE_TABLE_KEY)
+		return b, nil
+	}
 	return b, nil
 }
 
@@ -107,8 +136,27 @@ func (s *TableService) GetMyAddTableInfoListPage(ctx context.Context, req *model
 	if err != nil {
 		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
-	req.UserID = user.ID
-	tables, err := s.DB.GetMyAddTableInfoListPage(ctx, req)
+	var tables []*models.TableInfo
+	cacheKey := CACHE_TABLE_KEY + ADD_LIST_PAGE + strconv.FormatInt(user.ID, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
+	if err != nil {
+		if err == redis.Nil {
+			req.UserID = user.ID
+			tables, err = s.DB.GetMyAddTableInfoListPage(ctx, req)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get TableInfoListPage: %v", err)
+			}
+			marshal, _ := json.Marshal(&tables)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return tables, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &tables); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal TableInfoListPage: %v", err)
+	}
 	return tables, nil
 }
 
@@ -122,9 +170,28 @@ func (s *TableService) GetMyTableInfoListPage(ctx context.Context, req *models.T
 	if err != nil {
 		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
-	req.UserID = user.ID
-	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	tables, err := s.DB.GetMyTableInfoListPage(ctx, req)
+	var tables []*models.TableInfo
+	cacheKey := CACHE_TABLE_KEY + MY_LIST_PAGE + strconv.FormatInt(user.ID, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
+	if err != nil {
+		if err == redis.Nil {
+			req.UserID = user.ID
+			req.ReviewStatus = ReviewStatusEnumToInt[PASS]
+			tables, err = s.DB.GetMyTableInfoListPage(ctx, req)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get MyTableInfoListPage: %v", err)
+			}
+			marshal, _ := json.Marshal(&tables)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return tables, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &tables); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal MyTableInfoListPage: %v", err)
+	}
 	return tables, nil
 }
 
@@ -133,28 +200,45 @@ func (s *TableService) GetMyTableInfoList(ctx context.Context, req *models.Table
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	tableList := make([]*models.TableInfo, 0)
-	// 先查询审核通过的
-	req.ReviewStatus = ReviewStatusEnumToInt[PASS]
-	passTableInfoList, err := s.DB.GetMyTableInfoList(ctx, req, false)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get pass table list: %v", err)
-	}
-	tableList = append(tableList, passTableInfoList...)
-	//查询本人的表
 	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
 	if err != nil {
 		return nil, err
 	}
-	req.ReviewStatus = ReviewStatusEnumToInt[REVIEWING]
-	req.UserID = user.ID
-	myTableInfoList, err := s.DB.GetMyTableInfoList(ctx, req, true)
+	var tables []*models.TableInfo
+	cacheKey := CACHE_TABLE_KEY + MY_LIST + strconv.FormatInt(user.ID, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get my table list: %v", err)
+		if err == redis.Nil {
+			tableList := make([]*models.TableInfo, 0)
+			// 先查询审核通过的
+			req.ReviewStatus = ReviewStatusEnumToInt[PASS]
+			passTableInfoList, err := s.DB.GetMyTableInfoList(ctx, req, false)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get pass table list: %v", err)
+			}
+			tableList = append(tableList, passTableInfoList...)
+			//查询本人的表
+			req.ReviewStatus = ReviewStatusEnumToInt[REVIEWING]
+			req.UserID = user.ID
+			myTableInfoList, err := s.DB.GetMyTableInfoList(ctx, req, true)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get my table list: %v", err)
+			}
+			tableList = append(tableList, myTableInfoList...)
+			// 根据id去重
+			tables = tableDeduplicate(tableList)
+
+			marshal, _ := json.Marshal(&tables)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return tables, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
 	}
-	tableList = append(tableList, myTableInfoList...)
-	// 根据id去重
-	tables := tableDeduplicate(tableList)
+	if err := json.Unmarshal([]byte(value), &tables); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal MyTableInfoList: %v", err)
+	}
 	return tables, nil
 }
 
@@ -181,9 +265,25 @@ func (s *TableService) GetTableInfoListPage(ctx context.Context, req *models.Tab
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	tables, err := s.DB.GetTableInfoListPage(ctx, req)
+	var tables []*models.TableInfo
+	cacheKey := CACHE_TABLE_KEY + LIST_PAGE
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get TableInfoListPage: %v", err)
+		if err == redis.Nil {
+			tables, err = s.DB.GetTableInfoListPage(ctx, req)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get TableInfoListPage: %v", err)
+			}
+			marshal, _ := json.Marshal(&tables)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return tables, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &tables); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal TableInfoListPage: %v", err)
 	}
 	return tables, nil
 }

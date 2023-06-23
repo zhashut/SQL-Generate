@@ -2,6 +2,7 @@ package global
 
 import (
 	"github.com/gin-contrib/sessions"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"sql_generate/config"
 )
@@ -18,4 +19,5 @@ var (
 	ServerConfig *config.ServerConfig = &config.ServerConfig{}
 	DB           *gorm.DB
 	Session      sessions.Session
+	CaChe        *redis.Client
 )

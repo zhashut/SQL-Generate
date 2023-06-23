@@ -2,12 +2,17 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/copier"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	. "sql_generate/consts"
 	"sql_generate/global"
 	"sql_generate/models"
+	"sql_generate/respository/cache"
 	"sql_generate/respository/db"
+	"strconv"
 )
 
 /**
@@ -20,6 +25,7 @@ import (
 
 type ReportService struct {
 	DB           *db.ReportDao
+	Cache        *cache.Cache
 	DictDao      *db.DictDao
 	UserResolver UserResolver
 }
@@ -59,6 +65,10 @@ func (s *ReportService) AddReport(ctx context.Context, req *models.ReportAddRequ
 	if !result || err != nil {
 		return 0, fmt.Errorf("cannot add report: %v", err)
 	}
+	if err := s.Cache.DeleteKV(ctx, CACHE_REPORT_KEY+"*"); err != nil {
+		zap.S().Errorf("failed to delete: %s", CACHE_REPORT_KEY)
+		return report.ID, nil
+	}
 	return report.ID, nil
 }
 
@@ -67,9 +77,25 @@ func (s *ReportService) GetReportByID(ctx context.Context, id int64) (*models.Re
 	if id <= 0 {
 		return nil, fmt.Errorf("invalid id: %v", id)
 	}
-	report, err := s.DB.GetReportByID(ctx, id)
+	var report *models.Report
+	cacheKey := CACHE_REPORT_KEY + strconv.FormatInt(id, 10)
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get report: %v", err)
+		if err == redis.Nil {
+			report, err = s.DB.GetReportByID(ctx, id)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get report: %v", err)
+			}
+			marshal, _ := json.Marshal(&report)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return report, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
+	}
+	if err := json.Unmarshal([]byte(value), &report); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal response: %v", err)
 	}
 	return report, nil
 }
@@ -97,6 +123,10 @@ func (s *ReportService) DeleteReport(ctx context.Context, req *models.OnlyIDRequ
 	b, err := s.DB.DeletedReportByID(ctx, report.ID)
 	if err != nil {
 		return false, fmt.Errorf("cannot delete report: %v", err)
+	}
+	if err := s.Cache.DeleteKV(ctx, CACHE_REPORT_KEY+"*"); err != nil {
+		zap.S().Errorf("failed to delete: %s", CACHE_REPORT_KEY)
+		return b, nil
 	}
 	return b, nil
 }
@@ -128,6 +158,10 @@ func (s *ReportService) UpdateReport(ctx context.Context, req *models.ReportUpda
 	if !result || err != nil {
 		return false, fmt.Errorf("cannot update report: %v", err)
 	}
+	if err := s.Cache.DeleteKV(ctx, CACHE_REPORT_KEY+"*"); err != nil {
+		zap.S().Errorf("failed to delete: %s", CACHE_REPORT_KEY)
+		return true, nil
+	}
 	return true, nil
 }
 
@@ -136,11 +170,27 @@ func (s *ReportService) GetReportListPage(ctx context.Context, req *models.Repor
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
 	}
-	fields, err := s.DB.GetReportListPage(ctx, req)
+	var reports []*models.Report
+	cacheKey := CACHE_REPORT_KEY + LIST_PAGE
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get ReportListPage: %v", err)
+		if err == redis.Nil {
+			reports, err = s.DB.GetReportListPage(ctx, req)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get ReportListPage: %v", err)
+			}
+			marshal, _ := json.Marshal(&reports)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return reports, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
 	}
-	return fields, nil
+	if err := json.Unmarshal([]byte(value), &reports); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal response: %v", err)
+	}
+	return reports, nil
 }
 
 // GetReportList 获取列表（仅管理员可使用）
@@ -150,11 +200,27 @@ func (s *ReportService) GetReportList(ctx context.Context, req *models.ReportQue
 	if err != nil || user.UserRole != "admin" {
 		return nil, fmt.Errorf("权限不足")
 	}
-	fields, err := s.DB.GetReportList(ctx, req)
+	var reports []*models.Report
+	cacheKey := CACHE_REPORT_KEY + LIST
+	value, err := s.Cache.GetKV(ctx, cacheKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get ReportListPage: %v", err)
+		if err == redis.Nil {
+			reports, err = s.DB.GetReportList(ctx, req)
+			if err != nil {
+				return nil, fmt.Errorf("cannot get ReportList: %v", err)
+			}
+			marshal, _ := json.Marshal(&reports)
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+				return nil, fmt.Errorf("cannot set KV: %v", err)
+			}
+			return reports, nil
+		}
+		return nil, fmt.Errorf("unknow failed error: %v", err)
 	}
-	return fields, nil
+	if err := json.Unmarshal([]byte(value), &reports); err != nil {
+		return nil, fmt.Errorf("cannot Unmarshal response: %v", err)
+	}
+	return reports, nil
 }
 
 // ValidReport 检验

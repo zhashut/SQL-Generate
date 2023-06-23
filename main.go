@@ -23,6 +23,7 @@ func main() {
 	initialize.InitLogger()
 	initialize.InitConfig()
 	initialize.InitDB()
+	initialize.InitCache()
 	r := initialize.Router()
 
 	// 启动监听端口

@@ -18,7 +18,7 @@ import (
 
 func InitConfig() {
 	configPrefix := "config"
-	configFileName := fmt.Sprintf("%s-dev.yaml", configPrefix)
+	configFileName := fmt.Sprintf("%s.yaml", configPrefix)
 	v := viper.New()
 	// 文件路径设置
 	v.SetConfigFile(configFileName)
