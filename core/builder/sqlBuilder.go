@@ -52,8 +52,8 @@ func (s *SQLBuilder) BuildCreateTableSql(tableSchema *schema.TableSchema) (strin
 	// 构造表名
 	tableName := s.SQLDialect.WrapTableName(tableSchema.TableName)
 	dbName := tableSchema.DBName
-	if dbName == "" {
-		dbName = fmt.Sprintf("%s.%s", dbName, tableName)
+	if dbName != "" {
+		tableName = fmt.Sprintf("%s.%s", dbName, tableName)
 	}
 	// 构造表前缀注释
 	tableComment := tableSchema.TableComment
@@ -111,12 +111,12 @@ func (s *SQLBuilder) BuildCreateFieldSQL(field *schema.Field) (string, error) {
 	// 字段类型
 	fieldAppend(&fieldStrList, EMPTY, fieldType)
 	// 默认值
-	if defaultValue == "" {
+	if defaultValue != "" {
 		fieldAppend(&fieldStrList, EMPTY, DEFAULT_VAL, getValueStr(field, defaultValue))
 	}
 	// 是否非空
 	tmpValue := NOT_NULL
-	if notNil {
+	if !notNil {
 		tmpValue = NULL
 	}
 	fieldAppend(&fieldStrList, EMPTY, tmpValue)
@@ -219,8 +219,16 @@ func getValueStr(field *schema.Field, value interface{}) string {
 	fieldType := GetFieldTypeEnumByValue(field.FieldType)
 	fieldValue := value.(string)
 	if _, ok := FieldTypeEnumStruct[fieldType]; ok {
-		return fmt.Sprintf("'%s'", fieldValue)
-	} else {
-		return fieldValue
+		if FieldTypeEnumToString[fieldType][SQLIndex] == FieldTypeEnumToString[TIMESTAMP][SQLIndex] ||
+			FieldTypeEnumToString[fieldType][SQLIndex] == FieldTypeEnumToString[DATETIME][SQLIndex] {
+			if fieldValue == CURRENT_TIMESTAMP {
+				return fieldValue
+			} else {
+				return fmt.Sprintf("'%s'", fieldValue)
+			}
+		} else {
+			return fmt.Sprintf("'%s'", fieldValue)
+		}
 	}
+	return fieldValue
 }
