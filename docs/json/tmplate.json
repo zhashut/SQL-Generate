@@ -1,5 +1,5 @@
 {
-  "dbName": "yupi_db",
+  "dbName": "shut_db",
   "tableName": "user",
   "tableComment": "用户表",
   "mockNum": 10,
@@ -12,8 +12,8 @@
       "comment": "id",
       "primaryKey": true,
       "autoIncrement": true,
-      "mockType": "随机",
-      "mockParams": "整数",
+      "mockType": "递增",
+      "mockParams": 0,
       "onUpdate": null
     },
     {

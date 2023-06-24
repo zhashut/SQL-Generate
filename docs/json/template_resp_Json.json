@@ -1,0 +1,151 @@
+{
+  "code": 0,
+  "data": {
+    "tableSchema": {
+      "dbName": "shut_db",
+      "tableName": "user",
+      "tableComment": "用户表",
+      "mockNum": 10,
+      "fieldList": [
+        {
+          "fieldName": "id",
+          "fieldType": "bigint",
+          "defaultValue": "",
+          "notNull": true,
+          "comment": "id",
+          "primaryKey": true,
+          "autoIncrement": true,
+          "mockType": "递增",
+          "mockParams": 0,
+          "onUpdate": ""
+        },
+        {
+          "fieldName": "username",
+          "fieldType": "varchar(256)",
+          "defaultValue": "",
+          "notNull": true,
+          "comment": "用户名",
+          "primaryKey": false,
+          "autoIncrement": false,
+          "mockType": "随机",
+          "mockParams": "人名",
+          "onUpdate": ""
+        },
+        {
+          "fieldName": "create_time",
+          "fieldType": "datetime",
+          "defaultValue": "CURRENT_TIMESTAMP",
+          "notNull": true,
+          "comment": "创建时间",
+          "primaryKey": false,
+          "autoIncrement": false,
+          "mockType": "随机",
+          "mockParams": "日期",
+          "onUpdate": ""
+        },
+        {
+          "fieldName": "update_time",
+          "fieldType": "datetime",
+          "defaultValue": "CURRENT_TIMESTAMP",
+          "notNull": true,
+          "comment": "更新时间",
+          "primaryKey": false,
+          "autoIncrement": false,
+          "mockType": "随机",
+          "mockParams": "日期",
+          "onUpdate": "CURRENT_TIMESTAMP"
+        },
+        {
+          "fieldName": "is_deleted",
+          "fieldType": "tinyint",
+          "defaultValue": "0",
+          "notNull": true,
+          "comment": "是否删除(0-未删, 1-已删)",
+          "primaryKey": false,
+          "autoIncrement": false,
+          "mockType": "固定",
+          "mockParams": "0",
+          "onUpdate": ""
+        }
+      ]
+    },
+    "createSql": "-- 用户表\ncreate table if not exists shut_db.`user`\n(\n`id` bigint not null auto_increment comment 'id' primary key,\n`username` varchar(256) not null comment '用户名',\n`create_time` datetime default CURRENT_TIMESTAMP not null comment '创建时间',\n`update_time` datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',\n`is_deleted` tinyint default 0 not null comment '是否删除(0-未删, 1-已删)'\n) comment '用户表';",
+    "dataList": [
+      {
+        "create_time": "2021-07-14 09:15:00",
+        "id": "0",
+        "is_deleted": "0",
+        "update_time": "2021-07-14 09:15:00",
+        "username": "Petra Will"
+      },
+      {
+        "create_time": "2021-07-14 09:15:00",
+        "id": "1",
+        "is_deleted": "0",
+        "update_time": "2021-07-14 09:15:00",
+        "username": "Louisa Zieme"
+      },
+      {
+        "create_time": "2021-07-14 09:15:00",
+        "id": "2",
+        "is_deleted": "0",
+        "update_time": "2021-07-14 09:15:00",
+        "username": "Leila Mueller"
+      },
+      {
+        "create_time": "2021-07-14 09:15:00",
+        "id": "3",
+        "is_deleted": "0",
+        "update_time": "2021-07-14 09:15:00",
+        "username": "Chris Mertz"
+      },
+      {
+        "create_time": "2021-07-14 09:15:00",
+        "id": "4",
+        "is_deleted": "0",
+        "update_time": "2021-07-14 09:15:00",
+        "username": "Dwight Yundt"
+      },
+      {
+        "create_time": "2021-07-14 09:15:00",
+        "id": "5",
+        "is_deleted": "0",
+        "update_time": "2021-07-14 09:15:00",
+        "username": "Filiberto Runte"
+      },
+      {
+        "create_time": "2021-07-14 09:15:00",
+        "id": "6",
+        "is_deleted": "0",
+        "update_time": "2021-07-14 09:15:00",
+        "username": "Everett Murazik"
+      },
+      {
+        "create_time": "2021-07-14 09:15:00",
+        "id": "7",
+        "is_deleted": "0",
+        "update_time": "2021-07-14 09:15:00",
+        "username": "Mason Leffler"
+      },
+      {
+        "create_time": "2021-07-14 09:15:00",
+        "id": "8",
+        "is_deleted": "0",
+        "update_time": "2021-07-14 09:15:00",
+        "username": "Josh Schuppe"
+      },
+      {
+        "create_time": "2021-07-14 09:15:00",
+        "id": "9",
+        "is_deleted": "0",
+        "update_time": "2021-07-14 09:15:00",
+        "username": "Zula Zemlak"
+      }
+    ],
+    "insertSql": "insert into shut_db.`user` (`id`, `username`, `create_time`, `update_time`, `is_deleted`) values (0, 'Petra Will', '2021-07-14 09:15:00', '2021-07-14 09:15:00', 0);\ninsert into shut_db.`user` (`id`, `username`, `create_time`, `update_time`, `is_deleted`) values (1, 'Louisa Zieme', '2021-07-14 09:15:00', '2021-07-14 09:15:00', 0);\ninsert into shut_db.`user` (`id`, `username`, `create_time`, `update_time`, `is_deleted`) values (2, 'Leila Mueller', '2021-07-14 09:15:00', '2021-07-14 09:15:00', 0);\ninsert into shut_db.`user` (`id`, `username`, `create_time`, `update_time`, `is_deleted`) values (3, 'Chris Mertz', '2021-07-14 09:15:00', '2021-07-14 09:15:00', 0);\ninsert into shut_db.`user` (`id`, `username`, `create_time`, `update_time`, `is_deleted`) values (4, 'Dwight Yundt', '2021-07-14 09:15:00', '2021-07-14 09:15:00', 0);\ninsert into shut_db.`user` (`id`, `username`, `create_time`, `update_time`, `is_deleted`) values (5, 'Filiberto Runte', '2021-07-14 09:15:00', '2021-07-14 09:15:00', 0);\ninsert into shut_db.`user` (`id`, `username`, `create_time`, `update_time`, `is_deleted`) values (6, 'Everett Murazik', '2021-07-14 09:15:00', '2021-07-14 09:15:00', 0);\ninsert into shut_db.`user` (`id`, `username`, `create_time`, `update_time`, `is_deleted`) values (7, 'Mason Leffler', '2021-07-14 09:15:00', '2021-07-14 09:15:00', 0);\ninsert into shut_db.`user` (`id`, `username`, `create_time`, `update_time`, `is_deleted`) values (8, 'Josh Schuppe', '2021-07-14 09:15:00', '2021-07-14 09:15:00', 0);\ninsert into shut_db.`user` (`id`, `username`, `create_time`, `update_time`, `is_deleted`) values (9, 'Zula Zemlak', '2021-07-14 09:15:00', '2021-07-14 09:15:00', 0);",
+    "dataJson": "[\n  {\n    \"create_time\": \"2021-07-14 09:15:00\",\n    \"id\": \"0\",\n    \"is_deleted\": \"0\",\n    \"update_time\": \"2021-07-14 09:15:00\",\n    \"username\": \"Petra Will\"\n  },\n  {\n    \"create_time\": \"2021-07-14 09:15:00\",\n    \"id\": \"1\",\n    \"is_deleted\": \"0\",\n    \"update_time\": \"2021-07-14 09:15:00\",\n    \"username\": \"Louisa Zieme\"\n  },\n  {\n    \"create_time\": \"2021-07-14 09:15:00\",\n    \"id\": \"2\",\n    \"is_deleted\": \"0\",\n    \"update_time\": \"2021-07-14 09:15:00\",\n    \"username\": \"Leila Mueller\"\n  },\n  {\n    \"create_time\": \"2021-07-14 09:15:00\",\n    \"id\": \"3\",\n    \"is_deleted\": \"0\",\n    \"update_time\": \"2021-07-14 09:15:00\",\n    \"username\": \"Chris Mertz\"\n  },\n  {\n    \"create_time\": \"2021-07-14 09:15:00\",\n    \"id\": \"4\",\n    \"is_deleted\": \"0\",\n    \"update_time\": \"2021-07-14 09:15:00\",\n    \"username\": \"Dwight Yundt\"\n  },\n  {\n    \"create_time\": \"2021-07-14 09:15:00\",\n    \"id\": \"5\",\n    \"is_deleted\": \"0\",\n    \"update_time\": \"2021-07-14 09:15:00\",\n    \"username\": \"Filiberto Runte\"\n  },\n  {\n    \"create_time\": \"2021-07-14 09:15:00\",\n    \"id\": \"6\",\n    \"is_deleted\": \"0\",\n    \"update_time\": \"2021-07-14 09:15:00\",\n    \"username\": \"Everett Murazik\"\n  },\n  {\n    \"create_time\": \"2021-07-14 09:15:00\",\n    \"id\": \"7\",\n    \"is_deleted\": \"0\",\n    \"update_time\": \"2021-07-14 09:15:00\",\n    \"username\": \"Mason Leffler\"\n  },\n  {\n    \"create_time\": \"2021-07-14 09:15:00\",\n    \"id\": \"8\",\n    \"is_deleted\": \"0\",\n    \"update_time\": \"2021-07-14 09:15:00\",\n    \"username\": \"Josh Schuppe\"\n  },\n  {\n    \"create_time\": \"2021-07-14 09:15:00\",\n    \"id\": \"9\",\n    \"is_deleted\": \"0\",\n    \"update_time\": \"2021-07-14 09:15:00\",\n    \"username\": \"Zula Zemlak\"\n  }\n]",
+    "javaEntityCode": "/**\n * 用户表\n */\npublic class User {\n  /** id */\n  private Long Id;\n  /** 用户名 */\n  private String Username;\n  /** 创建时间 */\n  private Date CreateTime;\n  /** 更新时间 */\n  private Date UpdateTime;\n  /** 是否删除(0-未删, 1-已删) */\n  private Integer IsDeleted;\n}",
+    "goStructCode": "// 用户表\ntype User struct {\n  // id\n  Id int64\n  // 用户名\n  Username string\n  // 创建时间\n  CreateTime time.Time\n  // 更新时间\n  UpdateTime time.Time\n  // 是否删除(0-未删, 1-已删)\n  IsDeleted int\n}"
+  },
+  "message": "ok"
+}
