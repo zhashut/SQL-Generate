@@ -9,7 +9,7 @@ ENV GO111MODULE=on \
     GOPROXY=https://goproxy.cn,direct \
     GOBIN=/go/bin
 
-# 编译
+# 创建编译目录
 WORKDIR /go/src/sql-generate
 
 # 将代码复制到容器中
@@ -19,11 +19,8 @@ COPY go.sum .
 # 安装依赖包
 RUN go mod tidy
 
-# 拷贝源代码到镜像中
-COPY . /go/src/sql-generate
-
-# 拷贝配置文件到镜像中
-COPY ./config.yaml /go/src/sql-generate/config.yaml
+# 将所有源文件复制到容器中
+COPY . .
 
 # 编译代码并输出到 /go/bin
 RUN go build -o /go/bin/sql-generate .
@@ -31,8 +28,11 @@ RUN go build -o /go/bin/sql-generate .
 # 使用 alpine 镜像
 FROM alpine:3.18
 
-# 复制可执行文件到 /bin 下
+# 复制构建好的可执行文件到镜像中
 COPY --from=builder /go/bin/sql-generate /bin/sql-generate
+
+# 从编译器容器中复制 config.yaml 文件到容器中
+COPY --from=builder /go/src/sql-generate/config.yaml /config.yaml
 
 # 申明暴露的端口
 EXPOSE 8102

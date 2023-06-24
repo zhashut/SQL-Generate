@@ -20,7 +20,7 @@ type MySQLConfig struct {
 	Port     int    `mapstructure:"port" json:"port"`
 	Name     string `mapstructure:"db" json:"db"`
 	User     string `mapstructure:"user" json:"user"`
-	Password int    `mapstructure:"password" json:"password"`
+	Password string `mapstructure:"password" json:"password"`
 }
 
 type RedisConfig struct {

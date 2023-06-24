@@ -22,7 +22,7 @@ import (
 
 func InitDB() {
 	mysqlConfig := global.ServerConfig.MySQLConfig
-	dsn := fmt.Sprintf("%s:%d@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		mysqlConfig.User, mysqlConfig.Password, mysqlConfig.Host, mysqlConfig.Port, mysqlConfig.Name)
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags),
