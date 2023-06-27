@@ -26,6 +26,10 @@ type GenerateByAutoRequest struct {
 	Content string `json:"content"`
 }
 
+type GenerateBySqlRequest struct {
+	SQL string `json:"sql"`
+}
+
 // EntityDTO 代码生成器通用实体类
 type EntityDTO struct {
 	EntityName string

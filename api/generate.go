@@ -56,6 +56,21 @@ func GetSchemaByAuto(c *gin.Context) {
 	ResponseSuccess(c, auto)
 }
 
+// GetSchemaBySQL 导入 SQL
+func GetSchemaBySQL(c *gin.Context) {
+	var req models.GenerateBySqlRequest
+	if err := c.ShouldBind(&req); err != nil {
+		ResponseFailed(c, ErrorInvalidParams)
+		return
+	}
+	resp, err := tableSchemaBuilder.BuildFromSQL(req.SQL)
+	if err != nil {
+		ResponseFailed(c, ErrorPERATION)
+		return
+	}
+	ResponseSuccess(c, resp)
+}
+
 // GetSchemaByExcel Excel导入
 func GetSchemaByExcel(c *gin.Context) {
 	fileHeader, err := c.FormFile("file")

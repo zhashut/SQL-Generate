@@ -13,6 +13,7 @@ import (
 	"sql_generate/models"
 	"sql_generate/utils"
 	"strconv"
+	"vitess.io/vitess/go/vt/sqlparser"
 )
 
 /**
@@ -24,14 +25,19 @@ import (
  */
 
 const (
-	FLASE_FIELD = "false"
+	FLASE_FIELD      = "false"
+	colPrimaryKey    = 1
+	colNotPrimaryKey = 0
 )
 
 type TableSchemaBuilder struct {
+	SQLDialect SQLDialect
 }
 
 func NewTableSchemaBuilder() *TableSchemaBuilder {
-	return &TableSchemaBuilder{}
+	return &TableSchemaBuilder{
+		SQLDialect: NewMySQLDialect(),
+	}
 }
 
 // BuildFromAuto 智能导入
@@ -79,6 +85,50 @@ func (b *TableSchemaBuilder) BuildFromAuto(content string) (*schema.TableSchema,
 		fieldList = append(fieldList, field)
 	}
 	tableSchema.FieldList = fieldList
+	return tableSchema, nil
+}
+
+// BuildFromSQL 根据建表 SQL 构建
+func (b *TableSchemaBuilder) BuildFromSQL(sql string) (*schema.TableSchema, error) {
+	stmt, err := sqlparser.Parse(sql)
+	if err != nil {
+		return nil, fmt.Errorf("SQL 解析错误: %v", err)
+	}
+
+	createTable := stmt.(*sqlparser.CreateTable)
+	tableSchema := &schema.TableSchema{
+		DBName:    createTable.Table.Qualifier.String(),
+		TableName: createTable.Table.Name.String(),
+	}
+
+	var fieldList []*schema.Field
+	for _, col := range createTable.TableSpec.Columns {
+		field := &schema.Field{}
+		field.FieldName = col.Name.String()
+		field.FieldType = col.Type.Type
+		defaultValue := ""
+		if col.Type.Options.Default != nil {
+			defaultValue = getExprVal(col.Type.Options.Default)
+		}
+		field.DefaultValue = defaultValue
+		field.NotNull = *col.Type.Options.Null
+		if col.Type.Options.Comment != nil {
+			field.Comment = col.Type.Options.Comment.Val
+		}
+		if col.Type.Options.KeyOpt == sqlparser.ColumnKeyOption(colPrimaryKey) {
+			field.PrimaryKey = true
+		}
+		field.AutoIncrement = col.Type.Options.Autoincrement
+		onUpdate := ""
+		if col.Type.Options.OnUpdate != nil {
+			onUpdate = getExprVal(col.Type.Options.OnUpdate)
+		}
+		field.OnUpdate = onUpdate
+		field.MockType = MockTypeEnumToString[NONE]
+		fieldList = append(fieldList, field)
+	}
+	tableSchema.FieldList = fieldList
+
 	return tableSchema, nil
 }
 
@@ -169,4 +219,14 @@ func getDefaultField(word string) *schema.Field {
 		OnUpdate:      "",
 	}
 	return field
+}
+
+func getExprVal(expr sqlparser.Expr) string {
+	exprVal := ""
+	if curTimeFuncExpr, ok := expr.(*sqlparser.CurTimeFuncExpr); ok {
+		exprVal = curTimeFuncExpr.Name.String()
+	} else {
+		exprVal = sqlparser.String(expr)
+	}
+	return exprVal
 }
