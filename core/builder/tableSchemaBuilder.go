@@ -13,6 +13,7 @@ import (
 	"sql_generate/models"
 	"sql_generate/utils"
 	"strconv"
+	"strings"
 	"vitess.io/vitess/go/vt/sqlparser"
 )
 
@@ -26,6 +27,8 @@ import (
 
 const (
 	FLASE_FIELD      = "false"
+	VARCHAR_VAL      = "varchar"
+	VARCHAR_VALS     = "varchar(256)"
 	colPrimaryKey    = 1
 	colNotPrimaryKey = 0
 )
@@ -99,19 +102,25 @@ func (b *TableSchemaBuilder) BuildFromSQL(sql string) (*schema.TableSchema, erro
 	tableSchema := &schema.TableSchema{
 		DBName:    createTable.Table.Qualifier.String(),
 		TableName: createTable.Table.Name.String(),
+		MockNum:   10,
 	}
 
 	var fieldList []*schema.Field
 	for _, col := range createTable.TableSpec.Columns {
 		field := &schema.Field{}
 		field.FieldName = col.Name.String()
-		field.FieldType = col.Type.Type
+		if col.Type.Type == VARCHAR_VAL {
+			field.FieldType = VARCHAR_VALS
+		} else {
+			field.FieldType = col.Type.Type
+		}
+		field.MockParams = ""
 		defaultValue := ""
 		if col.Type.Options.Default != nil {
 			defaultValue = getExprVal(col.Type.Options.Default)
 		}
 		field.DefaultValue = defaultValue
-		field.NotNull = *col.Type.Options.Null
+		field.NotNull = !*col.Type.Options.Null
 		if col.Type.Options.Comment != nil {
 			field.Comment = col.Type.Options.Comment.Val
 		}
@@ -224,7 +233,7 @@ func getDefaultField(word string) *schema.Field {
 func getExprVal(expr sqlparser.Expr) string {
 	exprVal := ""
 	if curTimeFuncExpr, ok := expr.(*sqlparser.CurTimeFuncExpr); ok {
-		exprVal = curTimeFuncExpr.Name.String()
+		exprVal = strings.ToUpper(curTimeFuncExpr.Name.String())
 	} else {
 		exprVal = sqlparser.String(expr)
 	}
