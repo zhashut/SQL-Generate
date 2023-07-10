@@ -11,7 +11,6 @@ import (
 	. "sql_generate/consts"
 	"sql_generate/core"
 	"sql_generate/core/schema"
-	"sql_generate/global"
 	"sql_generate/models"
 	"sql_generate/respository/cache"
 	"sql_generate/respository/db"
@@ -30,31 +29,24 @@ import (
 type DictService struct {
 	DB               *db.DictDao
 	Cache            *cache.Cache
-	UserResolver     UserResolver
 	GenerateResolver GenerateResolver
 }
 
 func NewDictService() *DictService {
 	return &DictService{
-		UserResolver:     NewUserService(),
 		GenerateResolver: core.NewGeneratorFace(),
 	}
 }
 
 // AddDict 添加词条
-func (s *DictService) AddDict(ctx context.Context, dictAddReq *models.DictAddRequest) (int64, error) {
+func (s *DictService) AddDict(ctx context.Context, dictAddReq *models.DictAddRequest, uid int64) (int64, error) {
 	dict := &models.Dict{}
 	_ = copier.Copy(dict, dictAddReq)
 	// 检验
 	if err := s.ValidAndHandleDict(ctx, dict, true); err != nil {
 		return 0, err
 	}
-	// 获取当前登录用户ID
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return 0, fmt.Errorf("cannot get login user: %v", err)
-	}
-	dict.UserId = user.ID
+	dict.UserId = uid
 	result, err := s.DB.AddDict(ctx, dict)
 	if !result || err != nil {
 		return 0, fmt.Errorf("cannot add dict: %v", err)
@@ -95,23 +87,18 @@ func (s *DictService) GetDictByID(ctx context.Context, id int64) (*models.Dict, 
 }
 
 // DeleteDict 删除词条
-func (s *DictService) DeleteDict(ctx context.Context, req *models.OnlyIDRequest) (bool, error) {
+func (s *DictService) DeleteDict(ctx context.Context, req *models.OnlyIDRequest, user *models.User) (bool, error) {
 	if req == nil || req.ID <= 0 {
 		return false, fmt.Errorf("incorrect request parameters: %v", req.ID)
 	}
 	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return false, fmt.Errorf("cannot get login user: %v", err)
-	}
 	// 判断是否存在
 	dict, err := s.DB.GetDictByID(ctx, req.ID)
 	if err != nil {
 		return false, fmt.Errorf("cannot get dict: %v", err)
 	}
 	// 仅本人和管理员可以删除
-	admin, _ := s.UserResolver.IsAdmin(ctx, global.Session)
-	if dict.UserId != user.ID && !admin {
+	if dict.UserId != user.ID && user.UserRole != ADMIN {
 		return false, fmt.Errorf("not access delete dict")
 	}
 	b, err := s.DB.DeletedDictByID(ctx, dict.ID)
@@ -126,14 +113,9 @@ func (s *DictService) DeleteDict(ctx context.Context, req *models.OnlyIDRequest)
 }
 
 // GetMyAddDictListPage 分页获取当前用户创建的资源列表
-func (s *DictService) GetMyAddDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]*models.Dict, error) {
+func (s *DictService) GetMyAddDictListPage(ctx context.Context, req *models.DictQueryRequest, user *models.User) ([]*models.Dict, error) {
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
-	}
-	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
 	var dicts []*models.Dict
 	cacheKey := CACHE_DICT_KEY + ADD_LIST_PAGE + strconv.FormatInt(user.ID, 10)
@@ -157,14 +139,9 @@ func (s *DictService) GetMyAddDictListPage(ctx context.Context, req *models.Dict
 }
 
 // GetMyDictListPage 分页获取当前用户可选的资源列表
-func (s *DictService) GetMyDictListPage(ctx context.Context, req *models.DictQueryRequest) ([]*models.Dict, error) {
+func (s *DictService) GetMyDictListPage(ctx context.Context, req *models.DictQueryRequest, user *models.User) ([]*models.Dict, error) {
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
-	}
-	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
 	var dicts []*models.Dict
 	cacheKey := CACHE_DICT_KEY + MY_LIST_PAGE + strconv.FormatInt(user.ID, 10)
@@ -189,13 +166,9 @@ func (s *DictService) GetMyDictListPage(ctx context.Context, req *models.DictQue
 }
 
 // GetMyDictList 获取当前用户可选的全部资源列表（只返回 id 和名称）
-func (s *DictService) GetMyDictList(ctx context.Context, req *models.DictQueryRequest) ([]*models.Dict, error) {
+func (s *DictService) GetMyDictList(ctx context.Context, req *models.DictQueryRequest, user *models.User) ([]*models.Dict, error) {
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
-	}
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return nil, err
 	}
 	dictList := make([]*models.Dict, 0)
 	var dicts []*models.Dict

@@ -2,7 +2,9 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"sql_generate/consts"
 	"sql_generate/models"
+	"sql_generate/respository/ses"
 	"sql_generate/server"
 	"strconv"
 )
@@ -26,7 +28,13 @@ func AddReport(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	id, err := reportService.AddReport(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	id, err := reportService.AddReport(c, &req, user.ID)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -57,7 +65,13 @@ func DeletedReport(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	b, err := reportService.DeleteReport(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	b, err := reportService.DeleteReport(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -72,7 +86,13 @@ func UpdateReport(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	id, err := reportService.UpdateReport(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	id, err := reportService.UpdateReport(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -108,7 +128,13 @@ func GetReportList(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	reportList, err := reportService.GetReportList(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	reportList, err := reportService.GetReportList(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return

@@ -2,7 +2,9 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"sql_generate/consts"
 	"sql_generate/models"
+	"sql_generate/respository/ses"
 	"sql_generate/server"
 	"strconv"
 )
@@ -26,7 +28,13 @@ func AddDict(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	id, err := dictService.AddDict(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	id, err := dictService.AddDict(c, &req, user.ID)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -57,7 +65,11 @@ func DeletedDict(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	b, err := dictService.DeleteDict(c, &req)
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+	b, err := dictService.DeleteDict(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -72,7 +84,11 @@ func GetMyAddDictListPage(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	dictList, err := dictService.GetMyAddDictListPage(c, &req)
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+	dictList, err := dictService.GetMyAddDictListPage(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -93,7 +109,11 @@ func GetMyDictListPage(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	dictList, err := dictService.GetMyDictListPage(c, &req)
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+	dictList, err := dictService.GetMyDictListPage(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -114,7 +134,11 @@ func GetMyDictList(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	dictList, err := dictService.GetMyDictList(c, &req)
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+	dictList, err := dictService.GetMyDictList(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return

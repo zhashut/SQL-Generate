@@ -8,6 +8,7 @@ mysql:
 port: 8102
 redis:
     db: 0
+    expire_hour: 12
     host: 127.0.0.1
     pool_size: 10
     port: 6379

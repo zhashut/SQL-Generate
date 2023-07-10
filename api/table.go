@@ -2,7 +2,9 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"sql_generate/consts"
 	"sql_generate/models"
+	"sql_generate/respository/ses"
 	"sql_generate/server"
 	"strconv"
 )
@@ -26,7 +28,13 @@ func AddTableInfo(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	id, err := tableService.AddTableInfo(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	id, err := tableService.AddTableInfo(c, &req, user.ID)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -57,7 +65,13 @@ func DeletedTableInfo(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	b, err := tableService.DeleteTableInfo(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	b, err := tableService.DeleteTableInfo(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -72,7 +86,13 @@ func GetMyAddTableInfoListPage(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	fieldList, err := tableService.GetMyAddTableInfoListPage(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	fieldList, err := tableService.GetMyAddTableInfoListPage(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -93,7 +113,13 @@ func GetMyTableInfoListPage(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	fieldList, err := tableService.GetMyTableInfoListPage(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	fieldList, err := tableService.GetMyTableInfoListPage(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -114,7 +140,11 @@ func GetMyTableInfoList(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	fieldList, err := tableService.GetMyTableInfoList(c, &req)
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+	fieldList, err := tableService.GetMyTableInfoList(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return

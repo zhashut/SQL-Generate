@@ -11,7 +11,6 @@ import (
 	"sql_generate/core"
 	"sql_generate/core/builder"
 	"sql_generate/core/schema"
-	"sql_generate/global"
 	"sql_generate/models"
 	"sql_generate/respository/cache"
 	"sql_generate/respository/db"
@@ -29,21 +28,19 @@ import (
 type FieldService struct {
 	DB               *db.FieldDao
 	Cache            *cache.Cache
-	UserResolver     UserResolver
 	GenerateResolver GenerateResolver
 	BuilderResolver  BuilderResolver
 }
 
 func NewFieldService() *FieldService {
 	return &FieldService{
-		UserResolver:     NewUserService(),
 		GenerateResolver: core.NewGeneratorFace(),
 		BuilderResolver:  builder.NewSQLBuilder(),
 	}
 }
 
 // AddField 添加词条
-func (s *FieldService) AddField(ctx context.Context, fieldAddReq *models.FieldInfoAddRequest) (int64, error) {
+func (s *FieldService) AddField(ctx context.Context, fieldAddReq *models.FieldInfoAddRequest, uid int64) (int64, error) {
 	if fieldAddReq == nil {
 		return 0, fmt.Errorf("field cannot be nil")
 	}
@@ -53,12 +50,7 @@ func (s *FieldService) AddField(ctx context.Context, fieldAddReq *models.FieldIn
 	if err := s.ValidAndHandleField(ctx, field, true); err != nil {
 		return 0, err
 	}
-	// 获取当前登录用户ID
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return 0, fmt.Errorf("cannot get login user: %v", err)
-	}
-	field.UserId = user.ID
+	field.UserId = uid
 	result, err := s.DB.AddField(ctx, field)
 	if !result || err != nil {
 		return 0, fmt.Errorf("cannot add field: %v", err)
@@ -99,14 +91,9 @@ func (s *FieldService) GetFieldByID(ctx context.Context, id int64) (*models.Fiel
 }
 
 // DeleteField 删除词条
-func (s *FieldService) DeleteField(ctx context.Context, req *models.OnlyIDRequest) (bool, error) {
+func (s *FieldService) DeleteField(ctx context.Context, req *models.OnlyIDRequest, user *models.User) (bool, error) {
 	if req == nil || req.ID <= 0 {
 		return false, fmt.Errorf("incorrect request parameters: %v", req.ID)
-	}
-	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return false, fmt.Errorf("cannot get login user: %v", err)
 	}
 	// 判断是否存在
 	field, err := s.DB.GetFieldByID(ctx, req.ID)
@@ -114,8 +101,7 @@ func (s *FieldService) DeleteField(ctx context.Context, req *models.OnlyIDReques
 		return false, fmt.Errorf("cannot get field: %v", err)
 	}
 	// 仅本人和管理员可以删除
-	admin, _ := s.UserResolver.IsAdmin(ctx, global.Session)
-	if field.UserId != user.ID && !admin {
+	if field.UserId != user.ID && user.UserRole != ADMIN {
 		return false, fmt.Errorf("not access delete field")
 	}
 	b, err := s.DB.DeletedFieldByID(ctx, field.ID)
@@ -130,14 +116,9 @@ func (s *FieldService) DeleteField(ctx context.Context, req *models.OnlyIDReques
 }
 
 // GetMyAddFieldListPage 分页获取当前用户创建的资源列表
-func (s *FieldService) GetMyAddFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest) ([]*models.FieldInfo, error) {
+func (s *FieldService) GetMyAddFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest, user *models.User) ([]*models.FieldInfo, error) {
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
-	}
-	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
 	var fields []*models.FieldInfo
 	cacheKey := CACHE_FIELD_KEY + ADD_LIST_PAGE + strconv.FormatInt(user.ID, 10)
@@ -164,14 +145,9 @@ func (s *FieldService) GetMyAddFieldListPage(ctx context.Context, req *models.Fi
 }
 
 // GetMyFieldListPage 分页获取当前用户可选的资源列表
-func (s *FieldService) GetMyFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest) ([]*models.FieldInfo, error) {
+func (s *FieldService) GetMyFieldListPage(ctx context.Context, req *models.FieldInfoQueryRequest, user *models.User) ([]*models.FieldInfo, error) {
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
-	}
-	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
 	var fields []*models.FieldInfo
 	cacheKey := CACHE_FIELD_KEY + MY_LIST_PAGE + strconv.FormatInt(user.ID, 10)
@@ -199,13 +175,9 @@ func (s *FieldService) GetMyFieldListPage(ctx context.Context, req *models.Field
 }
 
 // GetMyFieldList 获取当前用户可选的全部资源列表（只返回 id 和名称）
-func (s *FieldService) GetMyFieldList(ctx context.Context, req *models.FieldInfoQueryRequest) ([]*models.FieldInfo, error) {
+func (s *FieldService) GetMyFieldList(ctx context.Context, req *models.FieldInfoQueryRequest, user *models.User) ([]*models.FieldInfo, error) {
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
-	}
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return nil, err
 	}
 	var fields []*models.FieldInfo
 	cacheKey := CACHE_FIELD_KEY + MY_LIST + strconv.FormatInt(user.ID, 10)

@@ -8,7 +8,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	. "sql_generate/consts"
-	"sql_generate/global"
 	"sql_generate/models"
 	"sql_generate/respository/cache"
 	"sql_generate/respository/db"
@@ -24,20 +23,17 @@ import (
  */
 
 type ReportService struct {
-	DB           *db.ReportDao
-	Cache        *cache.Cache
-	DictDao      *db.DictDao
-	UserResolver UserResolver
+	DB      *db.ReportDao
+	Cache   *cache.Cache
+	DictDao *db.DictDao
 }
 
 func NewReportService() *ReportService {
-	return &ReportService{
-		UserResolver: NewUserService(),
-	}
+	return &ReportService{}
 }
 
 // AddReport 添加举报信息
-func (s *ReportService) AddReport(ctx context.Context, req *models.ReportAddRequest) (int64, error) {
+func (s *ReportService) AddReport(ctx context.Context, req *models.ReportAddRequest, uid int64) (int64, error) {
 	if req == nil {
 		return 0, fmt.Errorf("report cannot be nil")
 	}
@@ -47,11 +43,6 @@ func (s *ReportService) AddReport(ctx context.Context, req *models.ReportAddRequ
 	if err := s.ValidReport(ctx, report, true); err != nil {
 		return 0, err
 	}
-	// 获取当前登录用户ID
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return 0, fmt.Errorf("cannot get login user: %v", err)
-	}
 	// TODO 根据 reportedID 获取Dict，这里估计是不好控制动态获取当前页面，就直接用 词库页了
 	dict, err := s.DictDao.GetDictByID(ctx, report.ReportedID)
 	if err != nil {
@@ -59,7 +50,7 @@ func (s *ReportService) AddReport(ctx context.Context, req *models.ReportAddRequ
 	}
 
 	report.ReportedUserId = dict.UserId
-	report.UserId = user.ID
+	report.UserId = uid
 	report.Status = ReportStatusEnumToInt[DEFAULT]
 	result, err := s.DB.SaveReport(ctx, report)
 	if !result || err != nil {
@@ -101,23 +92,18 @@ func (s *ReportService) GetReportByID(ctx context.Context, id int64) (*models.Re
 }
 
 // DeleteReport 删除举报信息
-func (s *ReportService) DeleteReport(ctx context.Context, req *models.OnlyIDRequest) (bool, error) {
+func (s *ReportService) DeleteReport(ctx context.Context, req *models.OnlyIDRequest, user *models.User) (bool, error) {
 	if req == nil || req.ID <= 0 {
 		return false, fmt.Errorf("incorrect request parameters: %v", req.ID)
 	}
 	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return false, fmt.Errorf("cannot get login user: %v", err)
-	}
 	// 判断是否存在
 	report, err := s.DB.GetReportByID(ctx, req.ID)
 	if err != nil {
 		return false, fmt.Errorf("cannot get report: %v", err)
 	}
 	// 仅本人和管理员可以删除
-	admin, _ := s.UserResolver.IsAdmin(ctx, global.Session)
-	if report.UserId != user.ID && !admin {
+	if report.UserId != user.ID && user.UserRole != ADMIN {
 		return false, fmt.Errorf("not access delete report")
 	}
 	b, err := s.DB.DeletedReportByID(ctx, report.ID)
@@ -132,10 +118,8 @@ func (s *ReportService) DeleteReport(ctx context.Context, req *models.OnlyIDRequ
 }
 
 // UpdateReport 更新（仅管理员）
-func (s *ReportService) UpdateReport(ctx context.Context, req *models.ReportUpdateRequest) (bool, error) {
-	// 获取当前登录用户ID
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil || user.UserRole != "admin" {
+func (s *ReportService) UpdateReport(ctx context.Context, req *models.ReportUpdateRequest, user *models.User) (bool, error) {
+	if user.UserRole != ADMIN {
 		return false, fmt.Errorf("权限不足")
 	}
 
@@ -194,10 +178,8 @@ func (s *ReportService) GetReportListPage(ctx context.Context, req *models.Repor
 }
 
 // GetReportList 获取列表（仅管理员可使用）
-func (s *ReportService) GetReportList(ctx context.Context, req *models.ReportQueryRequest) ([]*models.Report, error) {
-	// 获取当前登录用户ID
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil || user.UserRole != "admin" {
+func (s *ReportService) GetReportList(ctx context.Context, req *models.ReportQueryRequest, user *models.User) ([]*models.Report, error) {
+	if user.UserRole != ADMIN {
 		return nil, fmt.Errorf("权限不足")
 	}
 	var reports []*models.Report

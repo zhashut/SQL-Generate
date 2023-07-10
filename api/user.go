@@ -3,8 +3,9 @@ package api
 import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"sql_generate/global"
+	"sql_generate/consts"
 	"sql_generate/models"
+	"sql_generate/respository/ses"
 	"sql_generate/server"
 )
 
@@ -51,24 +52,25 @@ func Register(c *gin.Context) {
 // Login 用户登录
 func Login(c *gin.Context) {
 	var request models.UserLogin
-	global.Session = sessions.Default(c)
 	if err := c.ShouldBind(&request); err != nil {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	user, err := userService.Login(c, request.UserAccount, request.Password, global.Session)
+	s := sessions.Default(c)
+	user, err := userService.Login(c, request.UserAccount, request.Password, s)
 	if err != nil {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
+
 	ResponseSuccess(c, userToVo(user))
 }
 
 // LoginUser 获取当前登录用户
 func LoginUser(c *gin.Context) {
-	user, err := userService.GetLoginUser(c, global.Session)
-	if err != nil {
-		ResponseErrorWithMsg(c, ErrorNotLogin, err.Error())
+	// 获取登录用户信息
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
 		return
 	}
 
@@ -77,10 +79,6 @@ func LoginUser(c *gin.Context) {
 
 // Logout 用户退出
 func Logout(c *gin.Context) {
-	result, err := userService.Logout(c, global.Session)
-	if err != nil {
-		ResponseFailed(c, ErrorPERATION)
-		return
-	}
-	ResponseSuccess(c, result)
+	ses.DeleteSession(c, consts.USER_LOGIN_STATE)
+	ResponseSuccess(c, "ok")
 }

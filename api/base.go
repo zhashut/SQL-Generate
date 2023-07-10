@@ -1,12 +1,5 @@
 package api
 
-import (
-	"context"
-	"sql_generate/global"
-	"sql_generate/models"
-	"sql_generate/server"
-)
-
 /**
  * Created with GoLand 2022.2.3.
  * @author: 炸薯条
@@ -20,12 +13,6 @@ type PageInfo struct {
 	Pages    int64       `json:"current"`
 	PageSize int64       `json:"size"`
 	Total    int64       `json:"total"`
-}
-
-func GetUserBySession(c context.Context) (*models.User, error) {
-	// 获取当前用户id
-	userService := server.NewUserService()
-	return userService.GetLoginUser(c, global.Session)
 }
 
 // 这个函数解决了将列索引数字与 Excel 中列名的字母形式之间进行转换的问题。

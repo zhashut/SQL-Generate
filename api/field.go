@@ -2,7 +2,9 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"sql_generate/consts"
 	"sql_generate/models"
+	"sql_generate/respository/ses"
 	"sql_generate/server"
 	"strconv"
 )
@@ -26,7 +28,13 @@ func AddField(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	id, err := fieldService.AddField(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	id, err := fieldService.AddField(c, &req, user.ID)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -57,7 +65,13 @@ func DeletedField(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	b, err := fieldService.DeleteField(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	b, err := fieldService.DeleteField(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -72,7 +86,13 @@ func GetMyAddFieldListPage(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	fieldList, err := fieldService.GetMyAddFieldListPage(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	fieldList, err := fieldService.GetMyAddFieldListPage(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -93,7 +113,13 @@ func GetMyFieldListPage(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	fieldList, err := fieldService.GetMyFieldListPage(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	fieldList, err := fieldService.GetMyFieldListPage(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return
@@ -114,7 +140,13 @@ func GetMyFieldList(c *gin.Context) {
 		ResponseFailed(c, ErrorInvalidParams)
 		return
 	}
-	fieldList, err := fieldService.GetMyFieldList(c, &req)
+
+	user := ses.GetSession(c, consts.USER_LOGIN_STATE)
+	if user == nil {
+		return
+	}
+
+	fieldList, err := fieldService.GetMyFieldList(c, &req, user)
 	if err != nil {
 		ResponseErrorWithMsg(c, ErrorPERATION, err.Error())
 		return

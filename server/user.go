@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-contrib/sessions"
 	. "sql_generate/consts"
@@ -71,40 +72,11 @@ func (s *UserService) Login(ctx context.Context, account, password string, sessi
 	}
 	// 保存登录态
 	if res := session.Get(USER_LOGIN_STATE); res == nil {
-		session.Set(USER_LOGIN_STATE, user)
+		marshal, _ := json.Marshal(&user)
+		session.Set(USER_LOGIN_STATE, marshal)
 		_ = session.Save()
 	}
 	return user, nil
-}
-
-// GetLoginUser 获取当前登录用户
-func (s *UserService) GetLoginUser(ctx context.Context, session sessions.Session) (*models.User, error) {
-	currentUser := session.Get(USER_LOGIN_STATE).(*models.User)
-	if currentUser == nil {
-		return nil, fmt.Errorf("未登录")
-	}
-	user, err := s.DB.GetUserByID(ctx, currentUser.ID)
-	if err != nil {
-		return nil, fmt.Errorf("获取用户失败")
-	}
-	return user, nil
-}
-
-// Logout 用户退出
-func (s *UserService) Logout(ctx context.Context, session sessions.Session) (bool, error) {
-	currentUser := session.Get(USER_LOGIN_STATE).(*models.User)
-	if currentUser == nil {
-		return false, fmt.Errorf("未登录")
-	}
-	// 移除登录态
-	session.Delete(USER_LOGIN_STATE)
-	return true, nil
-}
-
-// IsAdmin 是否为管理员
-func (s *UserService) IsAdmin(ctx context.Context, session sessions.Session) (bool, error) {
-	currentUser := session.Get(USER_LOGIN_STATE).(*models.User)
-	return currentUser != nil && currentUser.UserRole == ADMIN_ROLE, nil
 }
 
 // 密码加密

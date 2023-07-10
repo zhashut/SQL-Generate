@@ -1,12 +1,8 @@
 package server
 
 import (
-	"context"
-	"github.com/gin-contrib/sessions"
-	"math/rand"
 	"sql_generate/core/schema"
 	"sql_generate/models"
-	"time"
 )
 
 /**
@@ -23,12 +19,8 @@ const (
 	MY_LIST_PAGE  = "myListPage:"
 	MY_LIST       = "myList:"
 	LIST          = "list"
+	ADMIN         = "admin"
 )
-
-type UserResolver interface {
-	GetLoginUser(ctx context.Context, session sessions.Session) (*models.User, error)
-	IsAdmin(ctx context.Context, session sessions.Session) (bool, error)
-}
 
 type GenerateResolver interface {
 	GenerateAll(tableSchema *schema.TableSchema) (*models.Generate, error)
@@ -39,9 +31,4 @@ type GenerateResolver interface {
 type BuilderResolver interface {
 	BuildCreateFieldSQL(field *schema.Field) (string, error)
 	BuildCreateTableSql(tableSchema *schema.TableSchema) (string, error)
-}
-
-func randomTime(expireHour int) time.Duration {
-	rand.Seed(time.Now().UnixMilli())
-	return time.Duration(rand.Intn(11)+(expireHour*3600)) * time.Second
 }

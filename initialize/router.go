@@ -1,9 +1,11 @@
 package initialize
 
 import (
+	"fmt"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
+	"sql_generate/global"
 	"sql_generate/middlewares"
 	"sql_generate/routers"
 )
@@ -18,8 +20,15 @@ import (
 
 func Router() *gin.Engine {
 	r := gin.Default()
-	store := cookie.NewStore([]byte("secret"))
-	r.Use(middlewares.Cors(), sessions.Sessions("mysession", store))
+	reds := global.ServerConfig.RedisConfig
+	store, _ := redis.NewStore(10, "tcp",
+		fmt.Sprintf("%s:%d", reds.Host, reds.Port), reds.Password, []byte("secret"))
+	store.Options(sessions.Options{
+		Path:     "/",
+		MaxAge:   reds.ExpireHour * 60 * 60,
+		HttpOnly: true,
+	})
+	r.Use(middlewares.Cors(), sessions.Sessions("zhashut", store))
 	apiGroup := r.Group("/api")
 	routers.InitGenerateSQL(apiGroup)
 	routers.InitUser(apiGroup)

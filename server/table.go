@@ -11,7 +11,6 @@ import (
 	"sql_generate/core"
 	"sql_generate/core/builder"
 	"sql_generate/core/schema"
-	"sql_generate/global"
 	"sql_generate/models"
 	"sql_generate/respository/cache"
 	"sql_generate/respository/db"
@@ -29,33 +28,26 @@ import (
 type TableService struct {
 	DB               *db.TableDao
 	Cache            *cache.Cache
-	UserResolver     UserResolver
 	GenerateResolver GenerateResolver
 	BuilderResolver  BuilderResolver
 }
 
 func NewTableService() *TableService {
 	return &TableService{
-		UserResolver:     NewUserService(),
 		GenerateResolver: core.NewGeneratorFace(),
 		BuilderResolver:  builder.NewSQLBuilder(),
 	}
 }
 
 // AddTableInfo 添加表
-func (s *TableService) AddTableInfo(ctx context.Context, tableAddReq *models.TableInfoAddRequest) (int64, error) {
+func (s *TableService) AddTableInfo(ctx context.Context, tableAddReq *models.TableInfoAddRequest, uid int64) (int64, error) {
 	table := &models.TableInfo{}
 	_ = copier.Copy(table, tableAddReq)
 	// 检验
 	if err := s.ValidAndHandleTableInfo(ctx, table, true); err != nil {
 		return 0, err
 	}
-	// 获取当前登录用户ID
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return 0, fmt.Errorf("cannot get login user: %v", err)
-	}
-	table.UserId = user.ID
+	table.UserId = uid
 	result, err := s.DB.AddTableInfo(ctx, table)
 	if !result || err != nil {
 		return 0, fmt.Errorf("cannot add table: %v", err)
@@ -96,14 +88,9 @@ func (s *TableService) GetTableInfoByID(ctx context.Context, id int64) (*models.
 }
 
 // DeleteTableInfo 删除表
-func (s *TableService) DeleteTableInfo(ctx context.Context, req *models.OnlyIDRequest) (bool, error) {
+func (s *TableService) DeleteTableInfo(ctx context.Context, req *models.OnlyIDRequest, user *models.User) (bool, error) {
 	if req == nil || req.ID <= 0 {
 		return false, fmt.Errorf("incorrect request parameters: %v", req.ID)
-	}
-	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return false, fmt.Errorf("cannot get login user: %v", err)
 	}
 	// 判断是否存在
 	table, err := s.DB.GetTableInfoByID(ctx, req.ID)
@@ -111,8 +98,7 @@ func (s *TableService) DeleteTableInfo(ctx context.Context, req *models.OnlyIDRe
 		return false, fmt.Errorf("cannot get table: %v", err)
 	}
 	// 仅本人和管理员可以删除
-	admin, _ := s.UserResolver.IsAdmin(ctx, global.Session)
-	if table.UserId != user.ID && !admin {
+	if table.UserId != user.ID && user.UserRole != ADMIN {
 		return false, fmt.Errorf("not access delete table")
 	}
 	b, err := s.DB.DeletedTableInfoByID(ctx, table.ID)
@@ -127,14 +113,9 @@ func (s *TableService) DeleteTableInfo(ctx context.Context, req *models.OnlyIDRe
 }
 
 // GetMyAddTableInfoListPage 分页获取当前用户创建的资源列表
-func (s *TableService) GetMyAddTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
+func (s *TableService) GetMyAddTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest, user *models.User) ([]*models.TableInfo, error) {
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
-	}
-	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
 	var tables []*models.TableInfo
 	cacheKey := CACHE_TABLE_KEY + ADD_LIST_PAGE + strconv.FormatInt(user.ID, 10)
@@ -161,14 +142,9 @@ func (s *TableService) GetMyAddTableInfoListPage(ctx context.Context, req *model
 }
 
 // GetMyTableInfoListPage 分页获取当前用户可选的资源列表
-func (s *TableService) GetMyTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
+func (s *TableService) GetMyTableInfoListPage(ctx context.Context, req *models.TableInfoQueryRequest, user *models.User) ([]*models.TableInfo, error) {
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
-	}
-	// 获取当前登录用户
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get login user: %v", err)
 	}
 	var tables []*models.TableInfo
 	cacheKey := CACHE_TABLE_KEY + MY_LIST_PAGE + strconv.FormatInt(user.ID, 10)
@@ -196,13 +172,9 @@ func (s *TableService) GetMyTableInfoListPage(ctx context.Context, req *models.T
 }
 
 // GetMyTableInfoList 获取当前用户可选的全部资源列表（只返回 id 和名称）
-func (s *TableService) GetMyTableInfoList(ctx context.Context, req *models.TableInfoQueryRequest) ([]*models.TableInfo, error) {
+func (s *TableService) GetMyTableInfoList(ctx context.Context, req *models.TableInfoQueryRequest, user *models.User) ([]*models.TableInfo, error) {
 	if req == nil {
 		return nil, fmt.Errorf("incorrect request parameters: %v", req)
-	}
-	user, err := s.UserResolver.GetLoginUser(ctx, global.Session)
-	if err != nil {
-		return nil, err
 	}
 	var tables []*models.TableInfo
 	cacheKey := CACHE_TABLE_KEY + MY_LIST + strconv.FormatInt(user.ID, 10)
