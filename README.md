@@ -45,13 +45,11 @@ SQL语句生成器
 - Gorm
 
 依赖库：
-
 - Viper : 配置管理
+- Vitess : 解析 SQL 语句
 - zap : 日志库
 - Excelize : 导入导出
-
 - Gofakeit ：模拟数据
-
 - template ：模板引擎
 
 # 快速启动
@@ -60,6 +58,8 @@ SQL语句生成器
 2. 运行 docs/sql/ 目录下的 create_table.sql 建表
 3. 修改 config-dev.yaml 中的数据库地址为自己的
 4. 已经编写好了 Dockerfile，支持 Docker 镜像部署。
+5. 注意，如果是 Win 系统，是启动不了的，因为用到了 vitess（不支持 Win），要启动需要在 WSL 才可，也可以选择注释掉相关代码
+   - 相关代码位置：core/builder/tableSchemaBuilder.go 中的 BuildFromSQL 方法（不要把方法全部注释，因为有引用的地方，注释方法里面的代码即可，返回 nil）和 getExprVal（这个全部注释掉即可）
 
 # 整体架构设计
 
