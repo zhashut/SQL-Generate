@@ -141,13 +141,16 @@ func (b *TableSchemaBuilder) BuildFromSQL(sql string) (*schema.TableSchema, erro
 	return tableSchema, nil
 }
 
-// BuildFromExcel 导入 Excel TODO Sheet1 是硬编码，改为入参，
+// BuildFromExcel 导入 Excel
 func (b *TableSchemaBuilder) BuildFromExcel(file multipart.File) (*schema.TableSchema, error) {
 	xlsx, err := excelize.OpenReader(file)
 	if err != nil {
 		return nil, fmt.Errorf("表格解析错误: %v", err)
 	}
-	rows, err := xlsx.Rows("Sheet1")
+	// 获取表名集合
+	sheets := xlsx.GetSheetMap()
+	// 只支持表格的第一个工作簿
+	rows, err := xlsx.Rows(sheets[1])
 	if err != nil {
 		return nil, fmt.Errorf("表格无数据: %v", err)
 	}
