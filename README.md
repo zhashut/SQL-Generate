@@ -1,6 +1,8 @@
 # SQL-Generate
 SQL语句生成器
 
+部署文档：https://github.com/zhashut/zhashut.github.io
+
 # 功能大全
 
 - 可视化建表
