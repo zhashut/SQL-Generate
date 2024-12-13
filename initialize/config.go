@@ -1,8 +1,11 @@
 package initialize
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/fsnotify/fsnotify"
+	"github.com/nacos-group/nacos-sdk-go/v2/clients"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"sql_generate/global"
@@ -18,24 +21,65 @@ import (
 
 func InitConfig() {
 	configPrefix := "config"
-	configFileName := fmt.Sprintf("./%s.yaml", configPrefix)
+	configFileName := fmt.Sprintf("./deploy/%s.yaml", configPrefix)
 	v := viper.New()
 	// 文件路径设置
 	v.SetConfigFile(configFileName)
 	if err := v.ReadInConfig(); err != nil {
 		panic(err)
 	}
-	if err := v.Unmarshal(&global.ServerConfig); err != nil {
+	if err := v.Unmarshal(&global.NacosConfig); err != nil {
 		panic(err)
 	}
-	zap.S().Infof("配置信息：%v", global.ServerConfig)
-	// viper的功能-动态监控变化
-	_ = v.WriteConfig()
-	v.OnConfigChange(func(e fsnotify.Event) {
-		zap.S().Infof("配置文件发生变化: %s", e.Name)
-		_ = v.ReadInConfig()
-		_ = v.Unmarshal(&global.ServerConfig)
-		zap.S().Infof("配置信息：%v", global.ServerConfig)
+	zap.S().Infof("nacos 配置信息：%v", global.NacosConfig)
+	// serverConfig
+	serverConfigs := []constant.ServerConfig{
+		{
+			IpAddr: global.NacosConfig.Host,
+			Port:   global.NacosConfig.Port,
+		},
+	}
+	// clientConifg
+	clientConfig := constant.ClientConfig{
+		NamespaceId:         global.NacosConfig.Namespace,
+		TimeoutMs:           5000,
+		NotLoadCacheAtStart: true,
+		LogDir:              "tmp/nacos/log",
+		CacheDir:            "tmp/nacos/cache",
+		LogLevel:            "debug",
+	}
+	// 创建动态配置客户端
+	configClient, err := clients.CreateConfigClient(map[string]interface{}{
+		"serverConfigs": serverConfigs,
+		"clientConfig":  clientConfig,
 	})
-	zap.S().Infof("%v", global.ServerConfig)
+	if err != nil {
+		panic(err)
+	}
+	// 获取配置：GetConfig
+	content, err := configClient.GetConfig(vo.ConfigParam{
+		DataId: global.NacosConfig.DataId,
+		Group:  global.NacosConfig.Group,
+	})
+	if err != nil {
+		panic(err)
+	}
+	// 将配置解析给 ServerConfig
+	err = json.Unmarshal([]byte(content), global.ServerConfig)
+	if err != nil {
+		panic(err)
+	}
+	// 监听配置变化
+	configClient.ListenConfig(vo.ConfigParam{
+		DataId: global.NacosConfig.DataId,
+		Group:  global.NacosConfig.Group,
+		OnChange: func(_, _, _, data string) {
+			err = json.Unmarshal([]byte(data), global.ServerConfig)
+			if err != nil {
+				panic(err)
+			}
+			zap.S().Infof("服务配置更新：%v", global.ServerConfig)
+		},
+	})
+	zap.S().Infof("服务配置信息：%v", global.ServerConfig)
 }

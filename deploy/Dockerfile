@@ -13,14 +13,14 @@ ENV GO111MODULE=on \
 WORKDIR /go/src/sql-generate
 
 # 将代码复制到容器中
-COPY go.mod .
-COPY go.sum .
+COPY ../go.mod .
+COPY ../go.sum .
 
 # 安装依赖包
 RUN go mod tidy
 
 # 将所有源文件复制到容器中
-COPY . .
+COPY .. .
 
 # 编译代码并输出到 /go/bin
 RUN go build -o /go/bin/sql-generate .

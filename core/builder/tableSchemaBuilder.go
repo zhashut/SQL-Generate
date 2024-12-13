@@ -13,8 +13,6 @@ import (
 	"sql_generate/models"
 	"sql_generate/utils"
 	"strconv"
-	"strings"
-	"vitess.io/vitess/go/vt/sqlparser"
 )
 
 /**
@@ -93,52 +91,52 @@ func (b *TableSchemaBuilder) BuildFromAuto(content string) (*schema.TableSchema,
 
 // BuildFromSQL 根据建表 SQL 构建
 func (b *TableSchemaBuilder) BuildFromSQL(sql string) (*schema.TableSchema, error) {
-	stmt, err := sqlparser.Parse(sql)
-	if err != nil {
-		return nil, fmt.Errorf("SQL 解析错误: %v", err)
-	}
+	//stmt, err := sqlparser.Parse(sql)
+	//if err != nil {
+	//	return nil, fmt.Errorf("SQL 解析错误: %v", err)
+	//}
+	//
+	//createTable := stmt.(*sqlparser.CreateTable)
+	//tableSchema := &schema.TableSchema{
+	//	DBName:    createTable.Table.Qualifier.String(),
+	//	TableName: createTable.Table.Name.String(),
+	//	MockNum:   10,
+	//}
+	//
+	//var fieldList []*schema.Field
+	//for _, col := range createTable.TableSpec.Columns {
+	//	field := &schema.Field{}
+	//	field.FieldName = col.Name.String()
+	//	if col.Type.Type == VARCHAR_VAL {
+	//		field.FieldType = VARCHAR_VALS
+	//	} else {
+	//		field.FieldType = col.Type.Type
+	//	}
+	//	field.MockParams = ""
+	//	defaultValue := ""
+	//	if col.Type.Options.Default != nil {
+	//		defaultValue = getExprVal(col.Type.Options.Default)
+	//	}
+	//	field.DefaultValue = defaultValue
+	//	field.NotNull = !*col.Type.Options.Null
+	//	if col.Type.Options.Comment != nil {
+	//		field.Comment = col.Type.Options.Comment.Val
+	//	}
+	//	if col.Type.Options.KeyOpt == sqlparser.ColumnKeyOption(colPrimaryKey) {
+	//		field.PrimaryKey = true
+	//	}
+	//	field.AutoIncrement = col.Type.Options.Autoincrement
+	//	onUpdate := ""
+	//	if col.Type.Options.OnUpdate != nil {
+	//		onUpdate = getExprVal(col.Type.Options.OnUpdate)
+	//	}
+	//	field.OnUpdate = onUpdate
+	//	field.MockType = MockTypeEnumToString[NONE]
+	//	fieldList = append(fieldList, field)
+	//}
+	//tableSchema.FieldList = fieldList
 
-	createTable := stmt.(*sqlparser.CreateTable)
-	tableSchema := &schema.TableSchema{
-		DBName:    createTable.Table.Qualifier.String(),
-		TableName: createTable.Table.Name.String(),
-		MockNum:   10,
-	}
-
-	var fieldList []*schema.Field
-	for _, col := range createTable.TableSpec.Columns {
-		field := &schema.Field{}
-		field.FieldName = col.Name.String()
-		if col.Type.Type == VARCHAR_VAL {
-			field.FieldType = VARCHAR_VALS
-		} else {
-			field.FieldType = col.Type.Type
-		}
-		field.MockParams = ""
-		defaultValue := ""
-		if col.Type.Options.Default != nil {
-			defaultValue = getExprVal(col.Type.Options.Default)
-		}
-		field.DefaultValue = defaultValue
-		field.NotNull = !*col.Type.Options.Null
-		if col.Type.Options.Comment != nil {
-			field.Comment = col.Type.Options.Comment.Val
-		}
-		if col.Type.Options.KeyOpt == sqlparser.ColumnKeyOption(colPrimaryKey) {
-			field.PrimaryKey = true
-		}
-		field.AutoIncrement = col.Type.Options.Autoincrement
-		onUpdate := ""
-		if col.Type.Options.OnUpdate != nil {
-			onUpdate = getExprVal(col.Type.Options.OnUpdate)
-		}
-		field.OnUpdate = onUpdate
-		field.MockType = MockTypeEnumToString[NONE]
-		fieldList = append(fieldList, field)
-	}
-	tableSchema.FieldList = fieldList
-
-	return tableSchema, nil
+	return nil, nil
 }
 
 // BuildFromExcel 导入 Excel
@@ -233,12 +231,12 @@ func getDefaultField(word string) *schema.Field {
 	return field
 }
 
-func getExprVal(expr sqlparser.Expr) string {
-	exprVal := ""
-	if curTimeFuncExpr, ok := expr.(*sqlparser.CurTimeFuncExpr); ok {
-		exprVal = strings.ToUpper(curTimeFuncExpr.Name.String())
-	} else {
-		exprVal = sqlparser.String(expr)
-	}
-	return exprVal
-}
+//func getExprVal(expr sqlparser.Expr) string {
+//	exprVal := ""
+//	if curTimeFuncExpr, ok := expr.(*sqlparser.CurTimeFuncExpr); ok {
+//		exprVal = strings.ToUpper(curTimeFuncExpr.Name.String())
+//	} else {
+//		exprVal = sqlparser.String(expr)	
+//	}
+//	return exprVal
+//}

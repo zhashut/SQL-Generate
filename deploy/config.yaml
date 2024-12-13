@@ -1,0 +1,7 @@
+dataid: sql-generate
+group: DEFAULT_GROUP
+host: localhost
+namespace: bc45ad9e-978c-427a-b6a9-620d9d7d9975
+password: nacos
+port: 8848
+user: nacos

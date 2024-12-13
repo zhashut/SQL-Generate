@@ -16,7 +16,8 @@ import (
  */
 
 var (
-	ServerConfig *config.ServerConfig = &config.ServerConfig{}
+	ServerConfig = &config.ServerConfig{}
+	NacosConfig  = &config.NacosConfig{}
 	DB           *gorm.DB
 	Session      sessions.Session
 	CaChe        *redis.Client
