@@ -32,7 +32,7 @@ FROM alpine:3.18
 COPY --from=builder /go/bin/sql-generate /bin/sql-generate
 
 # 从编译器容器中复制 config.yaml 文件到容器中
-COPY --from=builder /go/src/sql-generate/config.yaml /config.yaml
+COPY --from=builder /go/src/sql-generate/deploy/config.yaml /config.yaml
 
 # 申明暴露的端口
 EXPOSE 8102
