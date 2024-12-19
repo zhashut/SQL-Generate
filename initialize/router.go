@@ -36,5 +36,6 @@ func Router() *gin.Engine {
 	routers.InitDict(apiGroup)
 	routers.InitField(apiGroup)
 	routers.InitReport(apiGroup)
+	routers.InitExposureConfig(apiGroup)
 	return r
 }

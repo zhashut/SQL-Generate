@@ -13,4 +13,5 @@ const (
 	CACHE_FIELD_KEY  = "cache:field:"
 	CACHE_TABLE_KEY  = "cache:table:"
 	CACHE_REPORT_KEY = "cache:report:"
+	CACHE_CONFIG_KEY = "cache:config:"
 )

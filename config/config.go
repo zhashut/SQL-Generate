@@ -11,6 +11,7 @@ package config
 type ServerConfig struct {
 	Host        string      `mapstructure:"host" json:"host"`
 	Port        int         `mapstructure:"port" json:"port"`
+	Address     string      `mapstructure:"address" json:"address"`
 	MySQLConfig MySQLConfig `mapstructure:"mysql" json:"mysql"`
 	RedisConfig RedisConfig `mapstructure:"redis" json:"redis"`
 }

@@ -20,7 +20,7 @@ import (
  */
 
 func InitConfig() {
-	configPrefix := "config"
+	configPrefix := "config-pro"
 	configFileName := fmt.Sprintf("./deploy/%s.yaml", configPrefix)
 	v := viper.New()
 	// 文件路径设置
@@ -79,6 +79,7 @@ func InitConfig() {
 				panic(err)
 			}
 			zap.S().Infof("服务配置更新：%v", global.ServerConfig)
+			sendRestartSignal()
 		},
 	})
 	zap.S().Infof("服务配置信息：%v", global.ServerConfig)

@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"go.uber.org/zap"
+	"net"
 	"os"
-	"os/signal"
 	"sql_generate/global"
 	"sql_generate/initialize"
-	"syscall"
 )
 
 /**
@@ -26,17 +25,30 @@ func main() {
 	initialize.InitCache()
 	r := initialize.Router()
 
-	// 启动监听端口
-	zap.S().Debugf("启动服务器，端口：%d", global.ServerConfig.Port)
+	// 定义监听器
+	var listener net.Listener
+	// 获取 address
+	address := fmt.Sprintf("%s:%d", global.ServerConfig.Host, global.ServerConfig.Port)
+	// 检查是否有父进程传递的监听器（用于零停机重启）
+	if fd, err := initialize.GetListenerFromParent(); err != nil {
+		zap.S().Info("没有父进程传递的监听器，正常启动")
+		listener, err = net.Listen("tcp", address)
+		if err != nil {
+			zap.S().Fatal("监听端口失败：", err.Error())
+		}
+	} else {
+		listener = fd
+		initialize.KillParentProcess()
+	}
+
+	// 启动 HTTP 服务
 	go func() {
-		if err := r.Run(fmt.Sprintf(":%d", global.ServerConfig.Port)); err != nil {
-			zap.S().Fatal("启动失败", err.Error())
+		if err := r.RunListener(listener); err != nil {
+			zap.S().Fatal("服务器启动失败：", err.Error())
 		}
 	}()
+	zap.S().Infof("服务器启动成功，监听端口: %d, PID: %d", global.ServerConfig.Port, os.Getpid())
 
-	// 优雅退出
-	quit := make(chan os.Signal)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	zap.S().Infof("服务退出成功")
+	// 启动信号监听，处理优雅退出和零停机重启
+	initialize.HandleSignals(listener)
 }
