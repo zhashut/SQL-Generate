@@ -56,7 +56,7 @@ func (dao *TableDao) GetMyAddTableInfoListPage(ctx context.Context, req *models.
 	if err != nil {
 		return nil, err
 	}
-	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&tableList); res.Error != nil {
+	if res := db.Find(&tableList); res.Error != nil {
 		return nil, res.Error
 	}
 	return tableList, nil
@@ -71,7 +71,7 @@ func (dao *TableDao) GetMyTableInfoListPage(ctx context.Context, req *models.Tab
 	if err != nil {
 		return nil, err
 	}
-	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&tableList); res.Error != nil {
+	if res := db.Find(&tableList); res.Error != nil {
 		return nil, res.Error
 	}
 	return tableList, nil
@@ -114,7 +114,7 @@ func (dao *TableDao) GetTableInfoListPage(ctx context.Context, req *models.Table
 	if err != nil {
 		return nil, err
 	}
-	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&tableList); res.Error != nil {
+	if res := db.Find(&tableList); res.Error != nil {
 		return nil, res.Error
 	}
 	return tableList, nil

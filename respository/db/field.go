@@ -57,7 +57,7 @@ func (dao *FieldDao) GetMyAddFieldListPage(ctx context.Context, req *models.Fiel
 	if err != nil {
 		return nil, err
 	}
-	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&fieldList); res.Error != nil {
+	if res := db.Find(&fieldList); res.Error != nil {
 		return nil, res.Error
 	}
 	return fieldList, nil
@@ -72,7 +72,7 @@ func (dao *FieldDao) GetMyFieldListPage(ctx context.Context, req *models.FieldIn
 	if err != nil {
 		return nil, err
 	}
-	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&fieldList); res.Error != nil {
+	if res := db.Find(&fieldList); res.Error != nil {
 		return nil, res.Error
 	}
 	return fieldList, nil
@@ -115,7 +115,7 @@ func (dao *FieldDao) GetFieldListPage(ctx context.Context, req *models.FieldInfo
 	if err != nil {
 		return nil, err
 	}
-	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&fieldList); res.Error != nil {
+	if res := db.Find(&fieldList); res.Error != nil {
 		return nil, res.Error
 	}
 	return fieldList, nil

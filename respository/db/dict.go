@@ -57,7 +57,7 @@ func (dao *DictDao) GetMyAddDictListPage(ctx context.Context, req *models.DictQu
 	if err != nil {
 		return nil, err
 	}
-	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&dictList); res.Error != nil {
+	if res := db.Find(&dictList); res.Error != nil {
 		return nil, res.Error
 	}
 	return dictList, nil
@@ -72,7 +72,7 @@ func (dao *DictDao) GetMyDictListPage(ctx context.Context, req *models.DictQuery
 	if err != nil {
 		return nil, err
 	}
-	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&dictList); res.Error != nil {
+	if res := db.Find(&dictList); res.Error != nil {
 		return nil, res.Error
 	}
 	return dictList, nil
@@ -115,7 +115,7 @@ func (dao *DictDao) GetDictListPage(ctx context.Context, req *models.DictQueryRe
 	if err != nil {
 		return nil, err
 	}
-	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&dictList); res.Error != nil {
+	if res := db.Find(&dictList); res.Error != nil {
 		return nil, res.Error
 	}
 	return dictList, nil

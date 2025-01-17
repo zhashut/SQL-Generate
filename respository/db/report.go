@@ -64,7 +64,7 @@ func (dao *ReportDao) GetReportListPage(ctx context.Context, req *models.ReportQ
 		}
 		db = db.Order(order)
 	}
-	if res := db.Scopes(Paginate(int(req.Pages), int(req.PageSize))).Find(&reportList); res.Error != nil {
+	if res := db.Find(&reportList); res.Error != nil {
 		return nil, res.Error
 	}
 	return reportList, nil
