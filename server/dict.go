@@ -16,6 +16,7 @@ import (
 	"sql_generate/respository/db"
 	"strconv"
 	"strings"
+	"time"
 )
 
 /**
@@ -73,7 +74,7 @@ func (s *DictService) GetDictByID(ctx context.Context, id int64) (*models.Dict, 
 				return nil, fmt.Errorf("cannot get dict: %v", err)
 			}
 			marshal, _ := json.Marshal(&dict)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return dict, nil
@@ -125,7 +126,7 @@ func (s *DictService) GetMyAddDictListPage(ctx context.Context, req *models.Dict
 			req.UserID = user.ID
 			dicts, err = s.DB.GetMyAddDictListPage(ctx, req)
 			marshal, _ := json.Marshal(&dicts)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return dicts, nil
@@ -152,7 +153,7 @@ func (s *DictService) GetMyDictListPage(ctx context.Context, req *models.DictQue
 			req.ReviewStatus = ReviewStatusEnumToInt[PASS]
 			dicts, err = s.DB.GetMyDictListPage(ctx, req)
 			marshal, _ := json.Marshal(&dicts)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return dicts, nil
@@ -194,7 +195,7 @@ func (s *DictService) GetMyDictList(ctx context.Context, req *models.DictQueryRe
 			// 根据id去重
 			dicts = dictDeduplicate(dictList)
 			marshal, _ := json.Marshal(&dicts)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return dicts, nil
@@ -241,7 +242,7 @@ func (s *DictService) GetDictListPage(ctx context.Context, req *models.DictQuery
 				return nil, fmt.Errorf("cannot get DictListPage: %v", err)
 			}
 			marshal, _ := json.Marshal(&dicts)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return dicts, nil

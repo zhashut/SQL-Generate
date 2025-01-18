@@ -15,6 +15,7 @@ import (
 	"sql_generate/respository/cache"
 	"sql_generate/respository/db"
 	"strconv"
+	"time"
 )
 
 /**
@@ -74,7 +75,7 @@ func (s *TableService) GetTableInfoByID(ctx context.Context, id int64) (*models.
 				return nil, fmt.Errorf("cannot get table: %v", err)
 			}
 			marshal, _ := json.Marshal(&table)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return table, nil
@@ -128,7 +129,7 @@ func (s *TableService) GetMyAddTableInfoListPage(ctx context.Context, req *model
 				return nil, fmt.Errorf("cannot get TableInfoListPage: %v", err)
 			}
 			marshal, _ := json.Marshal(&tables)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return tables, nil
@@ -158,7 +159,7 @@ func (s *TableService) GetMyTableInfoListPage(ctx context.Context, req *models.T
 				return nil, fmt.Errorf("cannot get MyTableInfoListPage: %v", err)
 			}
 			marshal, _ := json.Marshal(&tables)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return tables, nil
@@ -201,7 +202,7 @@ func (s *TableService) GetMyTableInfoList(ctx context.Context, req *models.Table
 			tables = tableDeduplicate(tableList)
 
 			marshal, _ := json.Marshal(&tables)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return tables, nil
@@ -247,7 +248,7 @@ func (s *TableService) GetTableInfoListPage(ctx context.Context, req *models.Tab
 				return nil, fmt.Errorf("cannot get TableInfoListPage: %v", err)
 			}
 			marshal, _ := json.Marshal(&tables)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return tables, nil

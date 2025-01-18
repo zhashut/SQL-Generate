@@ -12,6 +12,7 @@ import (
 	"sql_generate/respository/cache"
 	"sql_generate/respository/db"
 	"strconv"
+	"time"
 )
 
 /**
@@ -78,7 +79,7 @@ func (s *ReportService) GetReportByID(ctx context.Context, id int64) (*models.Re
 				return nil, fmt.Errorf("cannot get report: %v", err)
 			}
 			marshal, _ := json.Marshal(&report)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return report, nil
@@ -164,7 +165,7 @@ func (s *ReportService) GetReportListPage(ctx context.Context, req *models.Repor
 				return nil, fmt.Errorf("cannot get ReportListPage: %v", err)
 			}
 			marshal, _ := json.Marshal(&reports)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return reports, nil
@@ -192,7 +193,7 @@ func (s *ReportService) GetReportList(ctx context.Context, req *models.ReportQue
 				return nil, fmt.Errorf("cannot get ReportList: %v", err)
 			}
 			marshal, _ := json.Marshal(&reports)
-			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 0); err != nil {
+			if err = s.Cache.SetKV(ctx, cacheKey, marshal, 24*time.Hour); err != nil {
 				return nil, fmt.Errorf("cannot set KV: %v", err)
 			}
 			return reports, nil
